@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"rsc.io/quote"
-	"file_mng"
 )
 
-
 func main() {
-    fmt.Println(quote.Go())
-	file_mng.funti("hola")
+	var config *Config
+
+	config = get_config_from_file_name("example.xml")
+
+	fmt.Println(config.To)
+	fmt.Println(config.From)
 }
