@@ -1,17 +1,24 @@
 package main
 
 import (
-	"encoding/xml"
+	"github.com/goccy/go-yaml"
 	"fmt"
 	"os"
 )
 
 /*
-Expand this struct as needed
+Store the data from the yaml to launch a process
+*/
+type Process struct {
+	Name	string  `yaml:"name"`
+	Args	string	`yaml:"args"`
+}
+
+/*
+Store all the data from the yaml
 */
 type Config struct {
-	To		string	`xml:"to"`
-	From	string	`xml:"from"`
+	Process	[]Process `yaml:"process"`
 }
 
 func	get_file_content(name string) []byte {
@@ -26,11 +33,11 @@ func	get_file_content(name string) []byte {
 	return content
 }
 
-func extract_file_content(raw_xml []byte) *Config {
+func extract_file_content(raw_yaml []byte) *Config {
 	var config	Config
 	var err		error
 
-	err = xml.Unmarshal(raw_xml, &config)
+	err = yaml.Unmarshal(raw_yaml, &config)
 	if (err != nil) {
 		fmt.Println(err)
 		os.Exit(1)
@@ -39,14 +46,14 @@ func extract_file_content(raw_xml []byte) *Config {
 }
 
 /*
-Extract and process the file with that name, and returns a pointer s_config with the data, only accepts .xml
+Extract and process the file with that name, and returns a pointer s_config with the data, only accepts .yaml
 In case of error, it exits
 */
 func get_config_from_file_name(name string) *Config {
-	var	raw_xml	[]byte
-	var config	*Config
+	var	raw_yaml	[]byte
+	var config		*Config
 
-	raw_xml = get_file_content(name)
-	config = extract_file_content(raw_xml)
+	raw_yaml = get_file_content(name)
+	config = extract_file_content(raw_yaml)
 	return (config)
 }

@@ -1,0 +1,6 @@
+process:
+  - name: "HOLA"
+    args: "MUNDO"
+
+  - name: "A"
+    args: "DIOS"

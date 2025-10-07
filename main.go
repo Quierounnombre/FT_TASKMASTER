@@ -7,8 +7,10 @@ import (
 func main() {
 	var config *Config
 
-	config = get_config_from_file_name("example.xml")
+	config = get_config_from_file_name("example.yaml")
 
-	fmt.Println(config.To)
-	fmt.Println(config.From)
+	fmt.Println(config.Process[0].Name)
+	fmt.Println(config.Process[1].Args)
+	fmt.Println(config.Process[1].Name)
+	fmt.Println(config.Process[0].Args)
 }
