@@ -1,4 +1,3 @@
-Cambiar a yaml desde xml
 crear un dockerfile para ejecutar el proyecto
 Mirar señales y go
 Loggeer event
@@ -10,3 +9,4 @@ DONE:
 Lector de archivos de configuración y lo guarde en una estructura
 Ver como funciona supervisor
 Mirar go y yaml
+Cambiar a yaml desde xml
