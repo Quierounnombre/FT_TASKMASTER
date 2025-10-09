@@ -19,6 +19,7 @@ Store all the data from the yaml
 */
 type Config struct {
 	Process	[]Process `yaml:"process"`
+	channel chan os.Signal
 }
 
 func	get_file_content(name string) []byte {
