@@ -12,11 +12,8 @@ func main() {
 	config = get_config_from_file_name("example.yaml")
 	config.channel = set_channel_for_signals()
 
-	fmt.Println(config.Process[0].Name)
-	fmt.Println(config.Process[1].Args)
-	fmt.Println(config.Process[1].Name)
-	fmt.Println(config.Process[0].Args)
-	
+	PrintConfigStruct(*config)
+
 	loop(config)
 }
 
