@@ -36,7 +36,8 @@ Store all the data from the yaml
 type Config struct {
 	Process		[]Process	`yaml:"process"`
 	Nun_procs	int			`yaml:"num_procs"`
-	channel chan os.Signal
+	sig_ch		chan os.Signal
+	input_ch	chan string
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
