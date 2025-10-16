@@ -1,7 +1,4 @@
-Lector de archivos de configuración y lo guarde en una estructura
-Ver como funciona supervisor
-Mirar go y yaml
-Mirar señales y go
-Loggeer event
-Shell like terminal
-executor (advance)
+Dockerfile para correr esta mierda
+refactorizar logger
+
+Executor!

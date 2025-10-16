@@ -1,1 +1,5 @@
 ft_taskmaster
+
+# Ignore log files
+*.log
+

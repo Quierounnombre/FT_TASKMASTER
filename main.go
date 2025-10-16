@@ -1,14 +1,11 @@
 package main
 
-import (
-	"fmt"
-)
+import "taskmaster/logger"
 
 func main() {
-	var config *Config
-
-	config = get_config_from_file_name("example.xml")
-
-	fmt.Println(config.To)
-	fmt.Println(config.From)
+	log, _ := logger.New("app.log")
+	defer log.Close()
+	
+	log.Info("Started")
+	log.Error("Test error")
 }
