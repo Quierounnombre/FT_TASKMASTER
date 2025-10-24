@@ -1,4 +1,12 @@
-Dockerfile para correr esta mierda
-refactorizar logger
+Cambiar a yaml desde xml
+crear un dockerfile para ejecutar el proyecto
+Mirar señales y go
+Loggeer event
+Custom exit(en gestor de procesos)?
+Shell like terminal
+executor (advance)
 
-Executor!
+DONE:
+Lector de archivos de configuración y lo guarde en una estructura
+Ver como funciona supervisor
+Mirar go y yaml
