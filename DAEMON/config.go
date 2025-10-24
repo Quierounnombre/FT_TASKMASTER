@@ -37,7 +37,7 @@ type Config struct {
 	Process		[]Process	`yaml:"process"`
 	Nun_procs	int			`yaml:"num_procs"`
 	sig_ch		chan os.Signal
-	input_ch	chan string
+	cli_ch		chan string
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

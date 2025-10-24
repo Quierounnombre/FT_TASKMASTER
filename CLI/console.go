@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/chzyer/readline"
+	"fmt"
 	"os"
+	"net"
+	"github.com/chzyer/readline"
 )
 
 //Sets the configuration for the console
@@ -16,24 +18,21 @@ func	set_config() *readline.Config {
 }
 
 //Sets up the channel and starts the go subrutine
-func	console_start() chan string {
+func	console_start(sk net.Conn) {
 	var rl			*readline.Instance
 	var config_rl	*readline.Config
-	var input_ch 	chan string
 	var err			error
 
 	config_rl = set_config()
-	input_ch = make(chan string)
 	rl, err = readline.NewEx(config_rl)
 	if (err != nil) {
 		os.Exit(1)
 	}
-	go console(input_ch, rl)
-	return (input_ch)
+	console(rl, sk)
 }
 
 //ASYNCRONOUS FUNC call with go
-func	console(input_ch chan string, rl *readline.Instance) {
+func	console(rl *readline.Instance, sk net.Conn) {
 	var err		error
 	var line	string
 	
@@ -42,6 +41,7 @@ func	console(input_ch chan string, rl *readline.Instance) {
 		if (err != nil) {
 			os.Exit(1)
 		}
-		input_ch <- line
+		fmt.Println("Has escrito -> ", line)
+		send_data(sk, line)
 	}
 }
