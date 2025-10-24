@@ -1,0 +1,13 @@
+services:
+  taskmaster-dev:
+    image: golang:1.25.1
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+    working_dir: /app
+    stdin_open: true # For keeping the STDIN open to type commands when exec into container
+    tty: true # For proper terminal behavior
+    command: /bin/bash
+
+volumes:
+  go-modules:
