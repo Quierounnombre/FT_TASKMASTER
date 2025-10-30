@@ -20,32 +20,29 @@ const (
 )
 
 type Task struct {
-	ID      string
-	Cmd     *exec.Cmd
-	Status  Status
-	LogFile *os.File
-	ExitCode int
+	ID        int
+	Name      string
+	Cmd       *exec.Cmd
+	Status    Status
+	LogFile   *os.File
+	ExitCode  int
 	StartTime time.Time
 }
 
 type Executor struct {
 	mu    sync.RWMutex
-	tasks map[string]*Task
+	tasks map[int]*Task
 }
 
-func New() *Executor {
+func NewExecutor() *Executor {
 	return &Executor{
-		tasks: make(map[string]*Task),
+		tasks: make(map[int]*Task),
 	}
 }
 
-func (e *Executor) Execute(id, logPath, command string, args ...string) error {
+func (e *Executor) Start(id int, name, logPath, command string, args ...string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-
-	if _, exists := e.tasks[id]; exists {
-		return fmt.Errorf("task %s already exists", id)
-	}
 
 	logFile, err := os.Create(logPath)
 	if err != nil {
@@ -58,6 +55,7 @@ func (e *Executor) Execute(id, logPath, command string, args ...string) error {
 
 	task := &Task{
 		ID:      id,
+		Name:    name,
 		Cmd:     cmd,
 		Status:  StatusPending,
 		LogFile: logFile,
@@ -94,28 +92,28 @@ func (e *Executor) run(task *Task) {
 	task.LogFile.Close()
 }
 
-func (e *Executor) GetStatus(id string) (Status, error) {
+func (e *Executor) GetStatus(id int) (Status, error) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
 	task, exists := e.tasks[id]
 	if !exists {
-		return "", fmt.Errorf("task %s not found", id)
+		return "", fmt.Errorf("task %d not found", id)
 	}
 	return task.Status, nil
 }
 
-func (e *Executor) Stop(id string) error {
+func (e *Executor) Stop(id int) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	task, exists := e.tasks[id]
 	if !exists {
-		return fmt.Errorf("task %s not found", id)
+		return fmt.Errorf("task %d not found", id)
 	}
 
 	if task.Status != StatusRunning {
-		return fmt.Errorf("task %s is not running", id)
+		return fmt.Errorf("task %d is not running", id)
 	}
 
 	if err := task.Cmd.Process.Signal(syscall.SIGTERM); err != nil {
@@ -125,17 +123,17 @@ func (e *Executor) Stop(id string) error {
 	return nil
 }
 
-func (e *Executor) Kill(id string) error {
+func (e *Executor) Kill(id int) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	task, exists := e.tasks[id]
 	if !exists {
-		return fmt.Errorf("task %s not found", id)
+		return fmt.Errorf("task %d not found", id)
 	}
 
 	if task.Status != StatusRunning {
-		return fmt.Errorf("task %s is not running", id)
+		return fmt.Errorf("task %d is not running", id)
 	}
 
 	if err := task.Cmd.Process.Kill(); err != nil {
@@ -144,5 +142,3 @@ func (e *Executor) Kill(id string) error {
 
 	return nil
 }
-
-
