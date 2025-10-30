@@ -1,6 +1,15 @@
 crear un dockerfile para ejecutar el proyecto
 Loggeer event
+limpiar
 Custom exit(en gestor de procesos)?
+CLI:
+	-	Archivo de historial mejor planteado
+Daemon:
+	-	Settear wrapper the cmds
+	-	SIGUSR1 para recargar config
+Mutuo:
+	-	Establecer un protocolo (idea, cmd + contenido)
+	-	Diseñar comandos
 executor (advance)
 
 DONE:
@@ -11,3 +20,5 @@ Lector de archivos de configuración y lo guarde en una estructura
 Ver como funciona supervisor
 Mirar go y yaml
 Cambiar a yaml desde xml
+enviar y reccibir, broadcast desde el server
+Recivir info desde el daemon

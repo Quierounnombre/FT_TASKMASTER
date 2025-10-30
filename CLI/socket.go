@@ -4,6 +4,8 @@ import (
 	"net"
 	"os"
 	"fmt"
+	"bufio"
+	"github.com/chzyer/readline"
 )
 
 func open_socket(socket_path string) net.Conn {
@@ -27,5 +29,22 @@ func send_data(sk net.Conn, str string) {
 	if (err != nil) {
 		fmt.Println("Error socket not working")
 		os.Exit(1)
+	}
+}
+
+func recive_data(sk net.Conn, rl *readline.Instance) {
+	var reader		*bufio.Reader
+	var msg			string
+	var err			error
+
+	reader = bufio.NewReader(sk)
+	for (true) {
+		msg, err = reader.ReadString('\n')
+		if (err != nil) {
+			fmt.Println("ERROR_RECIVING_DATA")
+			break
+		}
+		rl.Write([]byte(msg))
+		rl.Refresh()
 	}
 }

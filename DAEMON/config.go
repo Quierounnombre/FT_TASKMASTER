@@ -33,11 +33,9 @@ type Process struct {
 /*
 Store all the data from the yaml
 */
-type Config struct {
+type File_Config struct {
 	Process		[]Process	`yaml:"process"`
 	Nun_procs	int			`yaml:"num_procs"`
-	sig_ch		chan os.Signal
-	cli_ch		chan string
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -54,8 +52,8 @@ func	get_file_content(name string) []byte {
 	return content
 }
 
-func extract_file_content(raw_yaml []byte) *Config {
-	var config	Config
+func extract_file_content(raw_yaml []byte) *File_Config {
+	var config	File_Config
 	var err		error
 
 	err = yaml.Unmarshal(raw_yaml, &config)
@@ -67,7 +65,7 @@ func extract_file_content(raw_yaml []byte) *Config {
 }
 
 //Change empty values for defaults
-func set_config_defaults(config *Config) {
+func set_config_defaults(config *File_Config) {
 	if (config.Nun_procs == 0) {
 		config.Nun_procs = 1
 	}
@@ -88,17 +86,31 @@ func set_config_defaults(config *Config) {
 	}
 }
 
+func check_file_existance(path string) bool {
+	var	err	error
+
+	_, err = os.Stat(path)
+	if (err != nil) {
+		fmt.Println("Check for file existance in:", path)
+		return (false)
+	}
+	return (true)
+}
+
 /*
 Extract and process the file with that name, and returns a pointer s_config 
 with the data, only accepts .yaml In case of error, it exits
 */
-func get_config_from_file_name(name string) *Config {
+func get_config_from_file_name(name string, og_config *File_Config) *File_Config {
 	var	raw_yaml	[]byte
-	var config		*Config
+	var config		*File_Config
 
-	raw_yaml = get_file_content(name)
-	config = extract_file_content(raw_yaml)
-	set_config_defaults(config)
+	config = og_config
+	if (check_file_existance(name)) {
+		raw_yaml = get_file_content(name)
+		config = extract_file_content(raw_yaml)
+		set_config_defaults(config)
+	}
 	return (config)
 }
 
@@ -126,7 +138,7 @@ func PrintProcesStruct(p Process) {
 }
 
 //JUST PRINTS
-func PrintConfigStruct(c Config) {
+func PrintFile_ConfigStruct(c File_Config) {
 	fmt.Println("===     CONFIGURATION     ===")
 	fmt.Printf("Num_process = %d\n", c.Nun_procs)
 	for _, element := range c.Process {
