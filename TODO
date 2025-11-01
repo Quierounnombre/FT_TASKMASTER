@@ -14,6 +14,7 @@ executor (advance)
 
 DONE:
 Shell like terminal
+Protocolo basico
 Mirar señales y go
 Estructuras terminadas y con defaults
 Lector de archivos de configuración y lo guarde en una estructura

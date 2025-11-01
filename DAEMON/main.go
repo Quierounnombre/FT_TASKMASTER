@@ -24,7 +24,8 @@ Main loop with signal support
 func loop(sock_config *Sock_Config) {
 	var file_config	*File_Config
 	var signal 		os.Signal
-	var msg			string
+	var msg			Msg
+	var cmd			Cmd
 	
 	for (true) {
 		select {
@@ -33,8 +34,10 @@ func loop(sock_config *Sock_Config) {
 			os.Exit(1)
 		case msg = <- sock_config.cli_ch:
 			fmt.Println("MSG", " = ", msg)
-			file_config = get_config_from_file_name(msg, file_config)
-			broadcast_data(sock_config.cons, msg)
+			cmd.Parse_cmd(msg.content)
+			tmp := cmd.Execute(file_config)
+			msg.reply(tmp)
+			//broadcast_data(sock_config.cons, msg)
 		default:
 			//
 		}

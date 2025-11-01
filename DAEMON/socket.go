@@ -6,12 +6,11 @@ import (
 	"io"
 	"net"
 	"os"
-	"strings"
 )
 
 type Sock_Config struct {
 	sig_ch		chan os.Signal
-	cli_ch		chan string
+	cli_ch		chan Msg
 	cons		[]net.Conn
 }
 
@@ -30,8 +29,8 @@ func create_socket(socket_path string) net.Listener {
 	return (sk)
 }
 
-//
-func handle_connection(sk net.Listener, ch chan string, config *Sock_Config) {
+//Manage the creation of the connection with client
+func handle_connection(sk net.Listener, ch chan Msg, config *Sock_Config) {
 	var con		net.Conn
 	var err		error
 	
@@ -47,6 +46,7 @@ func handle_connection(sk net.Listener, ch chan string, config *Sock_Config) {
 	}
 }
 
+//Clean the list of clients
 func remove_closed_client(target_conn net.Conn, config *Sock_Config) {
 	var cons []net.Conn
 
@@ -59,14 +59,15 @@ func remove_closed_client(target_conn net.Conn, config *Sock_Config) {
 }
 
 //HANDLE THE CLIENT RECIVING DATA
-func handle_client(conn net.Conn, ch chan string, config *Sock_Config) {
+func handle_client(conn net.Conn, ch chan Msg, config *Sock_Config) {
 	var reader		*bufio.Reader
-	var msg			string
+	var msg			Msg
 	var err			error
 
+	msg.author = conn
 	reader = bufio.NewReader(conn)
 	for (true) {
-		msg, err = reader.ReadString('\n')
+		msg.content, err = reader.ReadString('\n')
 		if (err != nil) {
 			remove_closed_client(conn, config)
 			conn.Close()
@@ -77,7 +78,7 @@ func handle_client(conn net.Conn, ch chan string, config *Sock_Config) {
 			fmt.Println("ERROR_RECIVING_DATA")
 			break
 		}
-		msg = strings.Trim(msg, "\n") // DATA CLEAN UP
+		msg.clean_content()
 		ch <- msg
 	}
 }
@@ -99,12 +100,12 @@ func broadcast_data(connections []net.Conn, str string) {
 }
 
 //Generates a go channel and starts the subrutine for sending data through the channel
-func socket_wrapper(socket_path string, config *Sock_Config) chan string {
-	var ch chan string
+func socket_wrapper(socket_path string, config *Sock_Config) chan Msg {
+	var ch chan Msg
 	var sk net.Listener
 
 	sk = create_socket(socket_path)
-	ch = make(chan string)
+	ch = make(chan Msg)
 	go handle_connection(sk, ch, config)
 	return  (ch)
 }

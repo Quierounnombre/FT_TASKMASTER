@@ -24,7 +24,8 @@ func send_data(sk net.Conn, str string) {
 	var err		error
 	var bytes	[]byte	
 
-	bytes = append([]byte(str), '\n')
+
+	bytes = []byte("load " + str + "\n")
 	_, err = sk.Write(bytes)
 	if (err != nil) {
 		fmt.Println("Error socket not working")
