@@ -3,7 +3,6 @@ Loggeer event
 limpiar
 Custom exit(en gestor de procesos)?
 CLI:
-	-	Archivo de historial mejor planteado
 Daemon:
 	-	Settear wrapper the cmds
 	-	SIGUSR1 para recargar config

@@ -18,3 +18,14 @@ func	set_channel_for_signals() chan os.Signal{
 	return (channel)
 }
 
+func	handle_signals(sig os.Signal, config []File_Config) {
+	switch  sig {
+	case syscall.SIGHUP:
+		var cmd Cmd
+
+		cmd.Parse_cmd("reload")
+		cmd.Execute(config)
+	default:
+		os.Exit(1)
+	}
+}

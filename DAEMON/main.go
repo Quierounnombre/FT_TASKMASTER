@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -22,7 +21,7 @@ func main() {
 Main loop with signal support
 */
 func loop(sock_config *Sock_Config) {
-	var file_config	*File_Config
+	var file_config	[]File_Config
 	var signal 		os.Signal
 	var msg			Msg
 	var cmd			Cmd
@@ -30,10 +29,10 @@ func loop(sock_config *Sock_Config) {
 	for (true) {
 		select {
 		case signal = <- sock_config.sig_ch:
-			fmt.Println("SIGNAL", "=", signal)
-			os.Exit(1)
+			handle_signals(signal, file_config)
 		case msg = <- sock_config.cli_ch:
-			fmt.Println("MSG", " = ", msg)
+			cmd.empty_cmd()
+			msg.print_msg()
 			cmd.Parse_cmd(msg.content)
 			tmp := cmd.Execute(file_config)
 			msg.reply(tmp)

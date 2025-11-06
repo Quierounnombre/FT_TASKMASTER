@@ -6,11 +6,13 @@ import (
 	"github.com/chzyer/readline"
 )
 
+const history_path = "/run/.history"
+
 //Sets the configuration for the console
 func	set_config() *readline.Config {
 	var config_rl readline.Config
 
-	config_rl.HistoryFile = ".history"
+	config_rl.HistoryFile = history_path
 	config_rl.Prompt = "<>< "
 	config_rl.HistoryLimit = 100
 	return (&config_rl)

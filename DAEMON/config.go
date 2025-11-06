@@ -36,6 +36,7 @@ Store all the data from the yaml
 type File_Config struct {
 	Process		[]Process	`yaml:"process"`
 	Nun_procs	int			`yaml:"num_procs"`
+	Path		string
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,11 +102,10 @@ func check_file_existance(path string) bool {
 Extract and process the file with that name, and returns a pointer s_config 
 with the data, only accepts .yaml In case of error, it exits
 */
-func get_config_from_file_name(name string, og_config *File_Config) *File_Config {
+func get_config_from_file_name(name string) *File_Config {
 	var	raw_yaml	[]byte
 	var config		*File_Config
 
-	config = og_config
 	if (check_file_existance(name)) {
 		raw_yaml = get_file_content(name)
 		config = extract_file_content(raw_yaml)
