@@ -1,4 +1,8 @@
+#EXECUTABLES
 ft_taskmaster
-.history
-DAEMON
+DAEMON       
 CLI
+#FILES
+.history
+*.log
+
