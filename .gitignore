@@ -1,5 +1,8 @@
+#EXECUTABLES
 ft_taskmaster
-
-# Ignore log files
+DAEMON       
+CLI
+#FILES
+.history
 *.log
 
