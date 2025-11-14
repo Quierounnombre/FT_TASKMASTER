@@ -14,19 +14,28 @@ type Status string
 
 const (
 	StatusPending Status = "pending"
+	StatusKilled  Status = "killed"
 	StatusRunning Status = "running"
 	StatusStopped Status = "stopped"
 	StatusFailed  Status = "failed"
+	StatusSuccess Status = "success"
 )
 
 type Task struct {
-	ID        int
-	Name      string
-	Cmd       *exec.Cmd
-	Status    Status
-	LogFile   *os.File
-	ExitCode  int
-	StartTime time.Time
+	ID                int
+	Name              string
+	Cmd               *exec.Cmd
+	Status            Status
+	ExitCode          int
+	RestartCount      int
+	MaxRestarts       int
+	StartTime         time.Time
+	StdoutWriter      io.Writer
+	StderrWriter      io.Writer
+	Env               []string
+	WorkingDir        string
+	ExpectedExitCodes []int
+	Umask             *int
 }
 
 type Executor struct {
@@ -40,36 +49,67 @@ func NewExecutor() *Executor {
 	}
 }
 
-func (e *Executor) Start(id int, name, logPath, command string, args ...string) error {
+func (e *Executor) InitTask(id int, name, command string, stdout, stderr io.Writer, env []string, workingDir string, expectedExitCodes []int, umask *int, args ...string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	logFile, err := os.Create(logPath)
-	if err != nil {
-		return fmt.Errorf("failed to create log file: %w", err)
-	}
-
 	cmd := exec.Command(command, args...)
-	cmd.Stdout = io.MultiWriter(logFile, os.Stdout)
-	cmd.Stderr = io.MultiWriter(logFile, os.Stderr)
 
 	task := &Task{
-		ID:      id,
-		Name:    name,
-		Cmd:     cmd,
-		Status:  StatusPending,
-		LogFile: logFile,
+		ID:                id,
+		Name:              name,
+		Cmd:               cmd,
+		Status:            StatusPending,
+		StdoutWriter:      stdout,
+		StderrWriter:      stderr,
+		Env:               env,
+		WorkingDir:        workingDir,
+		ExpectedExitCodes: expectedExitCodes,
+		Umask:             umask,
 	}
 	e.tasks[id] = task
 
-	go e.run(task)
 	return nil
 }
 
-func (e *Executor) run(task *Task) {
+func (e *Executor) Start(id int) error {
 	e.mu.Lock()
+	task, exists := e.tasks[id]
+	if !exists {
+		e.mu.Unlock()
+		return fmt.Errorf("task %d not found", id)
+	}
+
+	if task.Status != StatusPending {
+		e.mu.Unlock()
+		return fmt.Errorf("task %d is not pending", id)
+	}
+
 	task.Status = StatusRunning
 	task.StartTime = time.Now()
+
+	if task.StdoutWriter != nil {
+		task.Cmd.Stdout = task.StdoutWriter
+	} else {
+		task.Cmd.Stdout = io.Discard
+	}
+	if task.StderrWriter != nil {
+		task.Cmd.Stderr = task.StderrWriter
+	} else {
+		task.Cmd.Stderr = io.Discard
+	}
+	if task.Env != nil {
+		task.Cmd.Env = task.Env
+	}
+	if task.WorkingDir != "" {
+		task.Cmd.Dir = task.WorkingDir
+	}
+	if task.Umask != nil {
+		if task.Cmd.SysProcAttr == nil {
+			task.Cmd.SysProcAttr = &syscall.SysProcAttr{}
+		}
+		task.Cmd.SysProcAttr.Umask = *task.Umask
+	}
 	e.mu.Unlock()
 
 	err := task.Cmd.Run()
@@ -83,13 +123,29 @@ func (e *Executor) run(task *Task) {
 				task.ExitCode = status.ExitStatus()
 			}
 		}
-		task.Status = StatusFailed
 	} else {
 		task.ExitCode = 0
-		task.Status = StatusStopped
 	}
 
-	task.LogFile.Close()
+	if e.isExpectedExitCode(task) {
+		task.Status = StatusStopped
+	} else {
+		task.Status = StatusFailed
+	}
+
+	return nil
+}
+
+func (e *Executor) isExpectedExitCode(task *Task) bool {
+	if task.ExpectedExitCodes == nil {
+		return task.ExitCode == 0
+	}
+	for _, code := range task.ExpectedExitCodes {
+		if task.ExitCode == code {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *Executor) GetStatus(id int) (Status, error) {

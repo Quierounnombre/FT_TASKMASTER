@@ -39,6 +39,7 @@ func (m *Manager) AddProfile() int {
 	return profileID
 }
 
+// REDUNDANT BECAUSE WE DON'T KNOW HOW INFO IS COMMING
 func (m *Manager) Execute(profileID int, name, logPath, command string, args ...string) (int, error) {
 	m.mu.Lock()
 	profile, exists := m.profiles[profileID]

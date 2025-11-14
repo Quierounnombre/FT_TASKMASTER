@@ -1,23 +1,9 @@
-Cambiar a yaml desde xml
-Mirar señales y go
-Custom exit(en gestor de procesos)?
-Shell like terminal
-
-DONE:
-executor (advance)
-Lector de archivos de configuración y lo guarde en una estructura
-Ver como funciona supervisor
-Mirar go y yaml
-crear un dockerfile para ejecutar el proyecto
-Loggeer event
-
-
 Executor:
 
-Options to discard the program’s stdout/stderr or to redirect them to files
-Environment variables to set before launching the program
-A working directory to set before launching the program
-An umask to set before launching the program
+✅ Options to discard the program’s stdout/stderr or to redirect them to files
+✅ Environment variables to set before launching the program
+✅ A working directory to set before launching the program
+An umask to set before launching the program (check)
 Whether to start this program at launch or not (?)
 
 Upper manager:
@@ -30,7 +16,7 @@ Upper manager:
 
 
 Hasta ahora lo que hemos hecho son un manager que tiene profiles (cada archivo de configuracion)
-La funcion Start es redundante. Solo tiene que inicializar un Task para un executor.
+Solo tiene que inicializar un Task para un executor.
 La idea es que cada task tenga toda la configuracion de un proceso a ejecutar!
 Hecho esto habria que testear y empezar con las tareas pendientes de arriba!
 listas procesos, perfiles... cargarse un perfil... Y UN VIGILANTE! <-
@@ -40,37 +26,21 @@ prompt del Vigilante:
 Constantly watches running processes - monitoring their state, health, and behavior
 
 Reports with Vigilante-style commentary - things like:
-
 "Dude, seriously? Process nginx just crashed AGAIN!"
-
 "I'm watching you, process worker-1... don't even THINK about dying on me"
-
 "Process api-server has been running for 3 hours straight. Respect."
-
 "Oh great, process database is using 95% CPU. That's just PERFECT."
-
 "Process cache-server stopped responding. Time to take out the trash."
 
 Triggers restart policies - when it detects a process has died or is misbehaving, it would:
-
 Check the restart policy (always/never/on-unexpected-exits)
-
 Verify exit codes against expected values
-
 Enforce the "successfully started" time threshold
-
 Coordinate with the Executor to restart if needed
-
 Maintains vigilance logs - keeping track of:
-
 Process uptime
-
 Restart counts
-
 Health check results
-
 Resource usage anomalies
 
 The Vigilante would sit between your Manager and Executors, constantly polling or receiving events about process state changes, and making decisions about what actions to take - all while providing sarcastic, Vigilante-style status updates in the logs.
-
-Would you like me to help you design the Vigilante struct and its core watching logic? It could have methods like Watch(), CheckHealth(), ReportStatus(), and TakeAction().

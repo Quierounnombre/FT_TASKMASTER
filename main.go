@@ -11,7 +11,7 @@ import (
 func main() {
 	log, _ := logger.New("app.log")
 	defer log.Close() //This will ensure the log file is closed when main exits
-	
+
 	// Example log entries
 	log.Info("Started")
 	log.Error("Test error")
