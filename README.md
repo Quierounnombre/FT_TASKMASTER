@@ -8,3 +8,4 @@ Then access the container:
 '''bash
 docker compose exec taskmaster-dev bash
 '''
+
