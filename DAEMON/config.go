@@ -48,7 +48,6 @@ func	get_file_content(name string) []byte {
 	content, err = os.ReadFile(name)
 	if (err != nil) {
 		fmt.Println(err)
-		os.Exit(1)
 	}
 	return content
 }
@@ -60,7 +59,6 @@ func extract_file_content(raw_yaml []byte) *File_Config {
 	err = yaml.Unmarshal(raw_yaml, &config)
 	if (err != nil) {
 		fmt.Println(err)
-		os.Exit(1)
 	}
 	return (&config)
 }

@@ -40,6 +40,6 @@ func main() {
 	check_file_existance(path)
 	sk = open_socket(socket_path)
 	defer sk.Close()
-	send_data(sk, path)
+	send_data(sk, string("load " + path))
 	console_start(sk)
 }

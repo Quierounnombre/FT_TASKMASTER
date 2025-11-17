@@ -1,14 +1,11 @@
 crear un dockerfile para ejecutar el proyecto
 Loggeer event
 limpiar
-Custom exit(en gestor de procesos)?
 CLI:
+FLAG PARA CAARGAR VS ENTRAR
 Daemon:
-	-	Settear wrapper the cmds
-	-	SIGUSR1 para recargar config
+Hacerlo que sea 100% deatach
 Mutuo:
-	-	Establecer un protocolo (idea, cmd + contenido)
-	-	Diseñar comandos
 executor (advance)
 
 DONE:
@@ -22,3 +19,7 @@ Mirar go y yaml
 Cambiar a yaml desde xml
 enviar y reccibir, broadcast desde el server
 Recivir info desde el daemon
+Establecer un protocolo (idea, cmd + contenido)
+Diseñar comandos
+SIGHUP para recargar config
+Settear wrapper the cmds
