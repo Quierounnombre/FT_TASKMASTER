@@ -1,6 +1,6 @@
-module ft_taskmaster
+module taskmaster
 
-go 1.24.4
+go 1.25.1
 
 require (
 	github.com/chzyer/readline v1.5.1

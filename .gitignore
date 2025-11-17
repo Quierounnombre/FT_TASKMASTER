@@ -1,2 +1,6 @@
+#EXECUTABLES
 ft_taskmaster
+#FILES
 .history
+*.log
+
