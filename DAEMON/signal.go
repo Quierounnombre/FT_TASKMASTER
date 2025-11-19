@@ -9,7 +9,7 @@ import (
 /*
 Create a channel and sets the flags and signals to listen
 */
-func	set_channel_for_signals() chan os.Signal{
+func set_channel_for_signals() chan os.Signal {
 	var channel chan os.Signal
 
 	channel = make(chan os.Signal, 1)
@@ -18,8 +18,8 @@ func	set_channel_for_signals() chan os.Signal{
 	return (channel)
 }
 
-func	handle_signals(sig os.Signal, config []File_Config) {
-	switch  sig {
+func handle_signals(sig os.Signal, config []File_Config) {
+	switch sig {
 	case syscall.SIGHUP:
 		var cmd Cmd
 

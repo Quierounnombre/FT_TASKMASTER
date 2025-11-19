@@ -5,24 +5,24 @@ import (
 	"strings"
 )
 
-const bold	=	"\033[1m"
-const reset	=	"\033[0m"  
+const bold = "\033[1m"
+const reset = "\033[0m"
 
 type Cmd struct {
-	base	string
-	flags	[]string
-	err		bool
+	base  string
+	flags []string
+	err   bool
 }
 
-//Parses the cmd and do all the data cleanup
-func (c *Cmd)Parse_cmd(content string) {
-	var splited_content	[]string
+// Parses the cmd and do all the data cleanup
+func (c *Cmd) Parse_cmd(content string) {
+	var splited_content []string
 
 	splited_content = strings.Split(content, " ")
-	if (len(splited_content) > 0) {
+	if len(splited_content) > 0 {
 		c.base = splited_content[0]
 		for _, element := range splited_content {
-			if (element != c.base) {
+			if element != c.base {
 				c.flags = append(c.flags, element)
 			}
 		}
@@ -32,12 +32,13 @@ func (c *Cmd)Parse_cmd(content string) {
 	}
 }
 
-//EXECUTE THE CMD, IN THE FUTURE WILL MERGE WITH PABLO
-func (c *Cmd)Execute(config []File_Config) string{
+// EXECUTE THE CMD, IN THE FUTURE WILL MERGE WITH PABLO
+func (c *Cmd) Execute(config []File_Config) string {
 	switch c.base {
 	case "load":
 		tmp := get_config_from_file_name(c.flags[0])
 		config = append(config, *tmp)
+		PrintFile_ConfigStruct(config[0])
 		return (string("Loaded " + c.flags[0]))
 	case "reload":
 		for index, element := range config {
@@ -51,24 +52,24 @@ func (c *Cmd)Execute(config []File_Config) string{
 		//CHECK FOR AVIABLE PROCESS HERE?
 		return (string("Started " + c.flags[0]))
 	case "restart":
-		if (len(c.flags) > 0) {
+		if len(c.flags) > 0 {
 			return (string("Restarted " + c.flags[0]))
 		}
 		return (string("Restarting all programs"))
 	case "ls":
-		return("HOLA")
+		return ("HOLA")
 	case "help":
-		return(cmd_help())
+		return (cmd_help())
 	}
 	return ("Wrong cmd")
 }
 
-func (c *Cmd)empty_cmd() {
+func (c *Cmd) empty_cmd() {
 	c.base = ""
 	c.flags = nil
 }
 
-//Returns a list with all the current working cmds
+// Returns a list with all the current working cmds
 func cmd_help() string {
 	var str string
 

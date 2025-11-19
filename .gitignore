@@ -4,3 +4,6 @@ ft_taskmaster
 .history
 *.log
 
+# No executables
+DAEMON/DAEMON
+CLI/CLI
