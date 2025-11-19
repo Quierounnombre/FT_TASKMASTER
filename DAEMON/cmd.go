@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"./executor"
 )
 
 const bold = "\033[1m"
@@ -32,13 +33,13 @@ func (c *Cmd) Parse_cmd(content string) {
 	}
 }
 
-// EXECUTE THE CMD, IN THE FUTURE WILL MERGE WITH PABLO
-func (c *Cmd) Execute(config []File_Config) string {
+// EXECUTE COMANDS
+func (c *Cmd) Execute(config []File_Config, manager *executor.Manager) string {
 	switch c.base {
 	case "load":
 		tmp := get_config_from_file_name(c.flags[0])
-		config = append(config, *tmp)
-		PrintFile_ConfigStruct(config[0])
+		PrintFile_ConfigStruct(*tmp)
+		manager.AddProfile(*tmp)
 		return (string("Loaded " + c.flags[0]))
 	case "reload":
 		for index, element := range config {
@@ -46,18 +47,24 @@ func (c *Cmd) Execute(config []File_Config) string {
 		}
 		return ("Configurations reloaded")
 	case "stop":
-		//CHECK FOR AVIABLE PROCESS HERE?
+		//CHECK FOR AVAILABLE PROCESS HERE?
+		// We would do manager.Stop(profileID, taskID) but this is TMP
 		return (string("Stoped " + c.flags[0]))
 	case "start":
-		//CHECK FOR AVIABLE PROCESS HERE?
+		//CHECK FOR AVAILABLE PROCESS HERE?
+		// We would do manager.Start(profileID, taskID) but this is TMP
 		return (string("Started " + c.flags[0]))
 	case "restart":
 		if len(c.flags) > 0 {
 			return (string("Restarted " + c.flags[0]))
 		}
 		return (string("Restarting all programs"))
+	case: "describe":
+		return (manager.DescribeTask(0, 0)) // 0 is TMP but has to be defined
+	case "lsPf":
+		return (manager.ListProfiles()) // For listing profiles
 	case "ls":
-		return ("HOLA")
+		return (manager.InfoStatusTasks(0)) // 0 is TMP but has to be defined
 	case "help":
 		return (cmd_help())
 	}

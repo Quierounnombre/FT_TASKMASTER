@@ -24,8 +24,8 @@ type Process struct {
 	Launch_wait     time.Duration     `yaml:"launch_wait"`     //Time until program launch is consider succesfull
 	Kill_wait       time.Duration     `yaml:"kill_wait"`       //Waittime for killing the program
 	Start_at_launch bool              `yaml:"start_at_launch"` //Start this program at launch or not
-	Umask           string            `yaml:"umask"`           //Umask to restrict permisions
-	Nun_procs       int               `yaml:"num_procs"`
+	Umask           int               `yaml:"umask"`           //Umask to restrict permissions
+	Num_procs       int               `yaml:"num_procs"`       //Number of this process to launch
 }
 
 /*
@@ -62,8 +62,8 @@ func extract_file_content(raw_yaml []byte) *File_Config {
 
 // Change empty values for defaults
 func set_config_defaults(config *File_Config) {
-	if config.Nun_procs == 0 {
-		config.Nun_procs = 1
+	if config.Num_procs == 0 {
+		config.Num_procs = 1
 	}
 	for index := range config.Process {
 		p := &config.Process[index]
@@ -78,6 +78,9 @@ func set_config_defaults(config *File_Config) {
 		}
 		if p.Restart == "" {
 			p.Restart = "never"
+		}
+		if p.Umask == 0 {
+			p.Umask = 0022 // Default umask: owner rwx, group/others r-x
 		}
 	}
 }
@@ -128,8 +131,8 @@ func PrintProcesStruct(p Process) {
 	fmt.Printf("Launch Wait:      %s\n", p.Launch_wait)
 	fmt.Printf("Kill Wait:        %s\n", p.Kill_wait)
 	fmt.Printf("Start at Launch:  %t\n", p.Start_at_launch)
-	fmt.Printf("Umask:            %s\n", p.Umask)
-	fmt.Printf("Num_process:      %d\n", p.Nun_procs)
+	fmt.Printf("Umask:             %d\n", p.Umask)
+	fmt.Printf("Num_process:      %d\n", p.Num_procs)
 	fmt.Println("============================")
 }
 
