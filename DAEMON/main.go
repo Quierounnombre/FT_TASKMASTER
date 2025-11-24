@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"./executor"
 )
 
 const socket_path = "/run/taskmaster.sock"
@@ -23,9 +24,11 @@ Main loop with signal support
 func loop(sock_config *Sock_Config) {
 	var file_config []File_Config
 	var signal os.Signal
+	var manager *executor.Manager
 	var msg Msg
 	var cmd Cmd
 
+	manager = executor.NewManager()
 	for true {
 		select {
 		case signal = <-sock_config.sig_ch:
@@ -34,7 +37,7 @@ func loop(sock_config *Sock_Config) {
 			cmd.empty_cmd()
 			msg.print_msg()
 			cmd.Parse_cmd(msg.content)
-			tmp := cmd.Execute(file_config)
+			tmp := cmd.Execute(file_config, manager)
 			msg.reply(tmp)
 			//broadcast_data(sock_config.cons, msg)
 		default:
