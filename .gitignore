@@ -1,9 +1,9 @@
-#EXECUTABLES
-ft_taskmaster
 #FILES
 .history
 *.log
 
-# No executables
+#EXECUTABLES
+ft_taskmaster
 DAEMON/DAEMON
 CLI/CLI
+DAEMON/taskmaster-daemon
