@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
-	"./executor"
+	"taskmaster-daemon/executor"
 )
 
 const bold = "\033[1m"
@@ -39,7 +39,8 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager) string {
 	case "load":
 		tmp := get_config_from_file_name(c.flags[0])
 		PrintFile_ConfigStruct(*tmp)
-		manager.AddProfile(*tmp)
+		execConfig := convertToExecutorConfig(*tmp)
+		manager.AddProfile(execConfig)
 		return (string("Loaded " + c.flags[0]))
 	case "reload":
 		for index, element := range config {
@@ -59,12 +60,15 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager) string {
 			return (string("Restarted " + c.flags[0]))
 		}
 		return (string("Restarting all programs"))
-	case: "describe":
-		return (manager.DescribeTask(0, 0)) // 0 is TMP but has to be defined
+	case "describe":
+		result, _ := manager.DescribeTask(0, 0)
+		return result
 	case "lsPf":
-		return (manager.ListProfiles()) // For listing profiles
+		// List profiles
+		return (manager.ListProfiles())
 	case "ls":
-		return (manager.InfoStatusTasks(0)) // 0 is TMP but has to be defined
+		result, _ := manager.InfoStatusTasks(0)
+		return result
 	case "help":
 		return (cmd_help())
 	}

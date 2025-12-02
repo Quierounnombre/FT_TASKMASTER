@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -120,13 +119,9 @@ func (e *Executor) initTask(process Process, nextID *int) {
 			cmd.Stderr = io.Discard
 		}
 		// Working Directory
-		if task.WorkingDir != "" {
+		if process.WorkingDir != "" {
 			cmd.Dir = process.WorkingDir
 		}
-		if cmd.SysProcAttr == nil {
-			cmd.SysProcAttr = &syscall.SysProcAttr{}
-		}
-		cmd.SysProcAttr.Umask = process.Umask
 
 		// Create and store the task
 		task := &Task{
