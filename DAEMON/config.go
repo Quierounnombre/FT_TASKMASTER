@@ -62,9 +62,6 @@ func extract_file_content(raw_yaml []byte) *File_Config {
 
 // Change empty values for defaults
 func set_config_defaults(config *File_Config) {
-	if config.Num_procs == 0 {
-		config.Num_procs = 1
-	}
 	for index := range config.Process {
 		p := &config.Process[index]
 		if p.Kill_wait.Seconds() < float64(time.Second) {
@@ -81,6 +78,9 @@ func set_config_defaults(config *File_Config) {
 		}
 		if p.Umask == 0 {
 			p.Umask = 0022 // Default umask: owner rwx, group/others r-x
+		}
+		if p.Num_procs <= 0 {
+			p.Num_procs = 1
 		}
 	}
 }

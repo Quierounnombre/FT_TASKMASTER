@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"taskmaster-daemon/executor"
 )
 
 /*
@@ -18,13 +19,13 @@ func set_channel_for_signals() chan os.Signal {
 	return (channel)
 }
 
-func handle_signals(sig os.Signal, config []File_Config) {
+func handle_signals(sig os.Signal, config []File_Config, manager *executor.Manager) {
 	switch sig {
 	case syscall.SIGHUP:
 		var cmd Cmd
 
 		cmd.Parse_cmd("reload")
-		cmd.Execute(config)
+		cmd.Execute(config, manager)
 	default:
 		os.Exit(1)
 	}

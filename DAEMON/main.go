@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"./executor"
+	"taskmaster-daemon/executor"
 )
 
 const socket_path = "/run/taskmaster.sock"
@@ -32,7 +32,7 @@ func loop(sock_config *Sock_Config) {
 	for true {
 		select {
 		case signal = <-sock_config.sig_ch:
-			handle_signals(signal, file_config)
+			handle_signals(signal, file_config, manager)
 		case msg = <-sock_config.cli_ch:
 			cmd.empty_cmd()
 			msg.print_msg()
