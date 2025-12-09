@@ -3,21 +3,7 @@ package executor
 import (
 	"fmt"
 	"strings"
-	"sync"
 )
-
-type Profile struct {
-	ID       int
-	executor *Executor
-	configFilePath string
-}
-
-type Manager struct {
-	mu          sync.RWMutex
-	profiles    map[int]*Profile
-	nextProfile int
-	nextID      int
-}
 
 func NewManager() *Manager {
 	return &Manager{

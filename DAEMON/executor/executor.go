@@ -6,65 +6,9 @@ import (
 	"io"
 	"os/exec"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 )
-
-type TaskInfo struct {
-	TaskID int    `json:"taskID"`
-	Name   string `json:"name"`
-	Status Status `json:"status"`
-	Cmd    string `json:"cmd"`
-}
-
-type TaskDetail struct {
-	ID                int      `json:"id"`
-	Name              string   `json:"name"`
-	Cmd               string   `json:"cmd"`
-	Status            Status   `json:"status"`
-	ExitCode          int      `json:"exitCode"`
-	RestartCount      int      `json:"restartCount"`
-	MaxRestarts       int      `json:"maxRestarts"`
-	StartTime         string   `json:"startTime"`
-	Env               []string `json:"env"`
-	WorkingDir        string   `json:"workingDir"`
-	ExpectedExitCodes []int    `json:"expectedExitCodes"`
-	Umask             int      `json:"umask"`
-}
-
-type Status string
-
-const (
-	StatusPending Status = "pending"
-	StatusKilled  Status = "killed"
-	StatusRunning Status = "running"
-	StatusStopped Status = "stopped"
-	StatusFailed  Status = "failed"
-	StatusSuccess Status = "success"
-)
-
-type Task struct {
-	ID                int
-	Name              string
-	Cmd               *exec.Cmd
-	Status            Status
-	ExitCode          int
-	RestartCount      int
-	MaxRestarts       int
-	StartTime         time.Time
-	StdoutWriter      io.Writer
-	StderrWriter      io.Writer
-	Env               []string
-	WorkingDir        string
-	ExpectedExitCodes []int
-	Umask              int
-}
-
-type Executor struct {
-	mu    sync.RWMutex
-	tasks map[int]*Task
-}
 
 func NewExecutor(config *File_Config, nextID *int) *Executor {
 	e := &Executor{
