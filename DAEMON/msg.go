@@ -28,18 +28,29 @@ func (m *Msg) reply() {
 }
 
 func (m *Msg) get_cmd() string {
-	return (m.content["cmd"].(string))
+	var ok		bool
+	var value	string
+
+	value, ok = m.content["cmd"].(string)
+	if (ok) {
+		return (value)
+	}
+	return ("")
 }
 
 func (m *Msg) get_flags() []string {
+	var ok		bool
 	var raw		[]interface{}
 	var flags	[]string
 
-	raw = m.content["flags"].([]interface{})
-	for _, value := range raw {
-		flags = append(flags, value.(string))
+	raw, ok = m.content["flags"].([]interface{})
+	if (ok) {
+		for _, value := range raw {
+			flags = append(flags, value.(string))
+		}
+		return (flags)
 	}
-	return (flags)
+	return (nil);
 }
 
 func (m *Msg) add_payload(key string, value interface{}) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"taskmaster-daemon/executor"
+	"fmt"
 )
 
 const bold = "\033[1m"
@@ -16,6 +17,7 @@ type Cmd struct {
 // Parses the cmd and do all the data cleanup
 func (c *Cmd) Parse_cmd(msg *Msg) {
 	c.base = msg.get_cmd()
+	fmt.Println("base =", c.base)
 	c.flags = msg.get_flags()
 	msg.clean_content()
 }

@@ -11,8 +11,8 @@ const socket_path = "/run/taskmaster.sock"
 const config_filename = "taskmaster.yaml"
 
 type Cmd struct {
-	cmd		string
-	flags	[]string
+	Cmd		string		`json:"cmd"`
+	Flags	[]string	`json:"flags"`
 }
 
 func get_yaml_path() string {
@@ -49,8 +49,8 @@ func main() {
 	sk = open_socket(socket_path)
 	defer sk.Close()
 	encoder = json.NewEncoder(sk)
-	cmd.cmd = "load"
-	cmd.flags = append(cmd.flags, path)
+	cmd.Cmd = "load"
+	cmd.Flags = append(cmd.Flags, path)
 	send_data(encoder, &cmd)
 	console_start(sk, encoder)
 }

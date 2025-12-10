@@ -45,7 +45,7 @@ func	console(rl *readline.Instance, encoder *json.Encoder) {
 		if (err != nil) {
 			os.Exit(1)
 		}
-		cmd.cmd = line
+		cmd.Cmd = line
 		send_data(encoder, &cmd)
 	}
 }
