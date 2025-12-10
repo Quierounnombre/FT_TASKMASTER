@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"strings"
 	"taskmaster-daemon/executor"
 )
 
@@ -16,21 +14,10 @@ type Cmd struct {
 }
 
 // Parses the cmd and do all the data cleanup
-func (c *Cmd) Parse_cmd(content string) {
-	var splited_content []string
-
-	splited_content = strings.Split(content, " ")
-	if len(splited_content) > 0 {
-		c.base = splited_content[0]
-		for _, element := range splited_content {
-			if element != c.base {
-				c.flags = append(c.flags, element)
-			}
-		}
-		//NEED FOR FLAG_CHEKING IN THE FUTURE?
-	} else {
-		fmt.Println("EMPTY CONTENT")
-	}
+func (c *Cmd) Parse_cmd(msg *Msg) {
+	c.base = msg.get_cmd()
+	c.flags = msg.get_flags()
+	msg.clean_content()
 }
 
 // EXECUTE COMANDS

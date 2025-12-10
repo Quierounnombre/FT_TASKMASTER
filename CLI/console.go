@@ -4,6 +4,7 @@ import (
 	"os"
 	"net"
 	"github.com/chzyer/readline"
+	"encoding/json"
 )
 
 const history_path = "/run/.history"
@@ -19,7 +20,7 @@ func	set_config() *readline.Config {
 }
 
 //Sets up rl library and starts the console
-func	console_start(sk net.Conn) {
+func	console_start(sk net.Conn, encoder *json.Encoder) {
 	var rl			*readline.Instance
 	var config_rl	*readline.Config
 	var err			error
@@ -30,19 +31,21 @@ func	console_start(sk net.Conn) {
 		os.Exit(1)
 	}
 	go recive_data(sk, rl)
-	console(rl, sk)
+	console(rl, encoder)
 }
 
 //Starts the console
-func	console(rl *readline.Instance, sk net.Conn) {
+func	console(rl *readline.Instance, encoder *json.Encoder) {
 	var err		error
 	var line	string
+	var cmd		Cmd
 	
 	for (true) {
 		line, err = rl.Readline()
 		if (err != nil) {
 			os.Exit(1)
 		}
-		send_data(sk, line)
+		cmd.cmd = line
+		send_data(encoder, &cmd)
 	}
 }

@@ -35,10 +35,10 @@ func loop(sock_config *Sock_Config) {
 			handle_signals(signal, file_config, manager)
 		case msg = <-sock_config.cli_ch:
 			cmd.empty_cmd()
-			msg.print_msg()
-			cmd.Parse_cmd(msg.content)
+			cmd.Parse_cmd(&msg)
 			tmp := cmd.Execute(file_config, manager)
-			msg.reply(tmp)
+			msg.add_payload("response", tmp);
+			msg.reply()
 			//broadcast_data(sock_config.cons, msg)
 		default:
 			//
