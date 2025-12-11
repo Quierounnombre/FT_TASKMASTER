@@ -33,9 +33,9 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager) string {
 		return (string("Loaded " + c.flags[0]))
 	case "reload":
 		// Relauch a profile (stop it, reread the config file, launch it again)
-		for index, element := range config {
-			config[index] = *get_config_from_file_name(element.Path)
-		}
+		tmp := get_config_from_file_name(c.flags[0]) //THERE SHOULD BE A WAY TO TAKE THE FILE PATH
+		PrintFile_ConfigStruct(*tmp)
+		manager.ReloadProfile(*tmp, 0) //LOOK OUT 0 IS NOT A DINAMIC SELECTED PROFILE
 		return ("Configurations reloaded")
 	case "stop":
 		//CHECK FOR AVAILABLE PROCESS HERE?
