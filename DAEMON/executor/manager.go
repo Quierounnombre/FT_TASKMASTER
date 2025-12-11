@@ -3,27 +3,22 @@ package executor
 import (
 	"fmt"
 	"strings"
-	"sync"
 )
 
-type Profile struct {
-	ID       int
-	executor *Executor
-	configFilePath string
-}
-
-type Manager struct {
-	mu          sync.RWMutex
-	profiles    map[int]*Profile
-	nextProfile int
-	nextID      int
-}
-
 func NewManager() *Manager {
-	return &Manager{
+	m := &Manager{
 		profiles:    make(map[int]*Profile),
 		nextProfile: 1,
 		nextID:      1,
+	}
+	m.watcher = NewWatcher(m)
+	m.watcher.Start()
+	return m
+}
+
+func (m *Manager) Shutdown() {
+	if m.watcher != nil {
+		m.watcher.Stop()
 	}
 }
 
@@ -45,8 +40,29 @@ func (m *Manager) AddProfile(config File_Config) int {
 }
 
 func (m *Manager) RemoveProfile(profileID int) error {
-	// TODO: Implement profile removal logic
-	// Have all tasks stopped before removing
+	m.mu.RLock()
+	profile, exists := m.profiles[profileID]
+	m.mu.RUnlock()
+
+	if !exists {
+		return fmt.Errorf("profile %d not found", profileID)
+	}
+
+	profile.executor.mu.Lock()
+	for _, task := range profile.executor.tasks {
+		task.Status = StatusTerminating
+	}
+	profile.executor.mu.Unlock()
+
+	taskIDs := profile.executor.ListTasks()
+	for _, taskID := range taskIDs {
+		profile.executor.Stop(taskID)
+	}
+
+	m.mu.Lock()
+	delete(m.profiles, profileID)
+	m.mu.Unlock()
+
 	return nil
 }
 

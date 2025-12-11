@@ -2,9 +2,12 @@ package executor
 
 import (
 	"io"
+	"os/exec"
+	"sync"
 	"time"
 )
 
+// Configuration types
 type Process struct {
 	Name              string
 	Cmd               string
@@ -26,4 +29,79 @@ type Process struct {
 type File_Config struct {
 	Process []Process
 	Path    string
+}
+
+// Task types
+type Status string
+
+const (
+	StatusPending   Status = "pending"
+	StatusKilled    Status = "killed"
+	StatusRunning   Status = "running"
+	StatusStopped   Status = "stopped"
+	StatusFailed    Status = "failed"
+	StatusSuccess   Status = "success"
+	StatusTerminating Status = "terminating"
+)
+
+type Task struct {
+	ID                int
+	Name              string
+	Cmd               *exec.Cmd
+	Status            Status
+	ExitCode          int
+	RestartCount      int
+	MaxRestarts       int
+	StartTime         time.Time
+	StdoutWriter      io.Writer
+	StderrWriter      io.Writer
+	Env               []string
+	WorkingDir        string
+	ExpectedExitCodes []int
+	Umask             int
+	restartPolicy     string
+	launchWait        time.Duration
+}
+
+type TaskInfo struct {
+	TaskID int    `json:"taskID"`
+	Name   string `json:"name"`
+	Status Status `json:"status"`
+	Cmd    string `json:"cmd"`
+}
+
+type TaskDetail struct {
+	ID                int      `json:"id"`
+	Name              string   `json:"name"`
+	Cmd               string   `json:"cmd"`
+	Status            Status   `json:"status"`
+	ExitCode          int      `json:"exitCode"`
+	RestartCount      int      `json:"restartCount"`
+	MaxRestarts       int      `json:"maxRestarts"`
+	StartTime         string   `json:"startTime"`
+	Env               []string `json:"env"`
+	WorkingDir        string   `json:"workingDir"`
+	ExpectedExitCodes []int    `json:"expectedExitCodes"`
+	Umask             int      `json:"umask"`
+}
+
+// Executor type
+type Executor struct {
+	mu    sync.RWMutex
+	tasks map[int]*Task
+}
+
+// Manager types
+type Profile struct {
+	ID             int
+	executor       *Executor
+	configFilePath string
+}
+
+type Manager struct {
+	mu          sync.RWMutex
+	profiles    map[int]*Profile
+	nextProfile int
+	nextID      int
+	watcher     *Watcher
 }
