@@ -78,7 +78,10 @@ func (e *Executor) initTask(process Process, nextID *int) {
 			Env:               envSlice,
 			WorkingDir:        process.WorkingDir,
 			ExpectedExitCodes: process.ExpectedExitCodes,
-			Umask:              process.Umask,
+			Umask:             process.Umask,
+			MaxRestarts:       process.Restart_atempts,
+			restartPolicy:     process.Restart,
+			launchWait:        process.Launch_wait,
 		}
 		e.tasks[taskID] = task
 	}

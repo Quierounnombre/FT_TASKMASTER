@@ -35,12 +35,13 @@ type File_Config struct {
 type Status string
 
 const (
-	StatusPending Status = "pending"
-	StatusKilled  Status = "killed"
-	StatusRunning Status = "running"
-	StatusStopped Status = "stopped"
-	StatusFailed  Status = "failed"
-	StatusSuccess Status = "success"
+	StatusPending   Status = "pending"
+	StatusKilled    Status = "killed"
+	StatusRunning   Status = "running"
+	StatusStopped   Status = "stopped"
+	StatusFailed    Status = "failed"
+	StatusSuccess   Status = "success"
+	StatusTerminating Status = "terminating"
 )
 
 type Task struct {
@@ -58,6 +59,8 @@ type Task struct {
 	WorkingDir        string
 	ExpectedExitCodes []int
 	Umask             int
+	restartPolicy     string
+	launchWait        time.Duration
 }
 
 type TaskInfo struct {
@@ -100,4 +103,5 @@ type Manager struct {
 	profiles    map[int]*Profile
 	nextProfile int
 	nextID      int
+	watcher     *Watcher
 }
