@@ -1,8 +1,8 @@
 package executor
 
 import (
+	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 func NewManager() *Manager {
@@ -70,21 +70,13 @@ func (m *Manager) ListProfiles() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	if len(m.profiles) == 0 {
-		return "[]"
+	profileIDs := make([]int, 0, len(m.profiles))
+	for id := range m.profiles {
+		profileIDs = append(profileIDs, id)
 	}
 
-	result := "["
-	first := true
-	for id := range m.profiles {
-		if !first {
-			result += ","
-		}
-		result += fmt.Sprintf("%d", id)
-		first = false
-	}
-	result += "]"
-	return result
+	jsonBytes, _ := json.Marshal(profileIDs)
+	return string(jsonBytes)
 }
 
 // Task Management
@@ -109,20 +101,31 @@ func (m *Manager) InfoStatusTasks(profileID int) (string, error) {
 	}
 
 	taskIDs := profile.executor.ListTasks()
-	if len(taskIDs) == 0 {
-		return "[]", nil
-	}
-
-	jsonStrings := make([]string, 0, len(taskIDs))
+	taskInfos := make([]TaskInfo, 0, len(taskIDs))
+	
 	for _, taskID := range taskIDs {
-		info, err := profile.executor.GetTaskInfo(taskID)
-		if err != nil {
-			return "", err
+		profile.executor.mu.RLock()
+		task, exists := profile.executor.tasks[taskID]
+		if !exists {
+			profile.executor.mu.RUnlock()
+			continue
 		}
-		jsonStrings = append(jsonStrings, info)
+		
+		taskInfo := TaskInfo{
+			TaskID: task.ID,
+			Name:   task.Name,
+			Status: task.Status,
+			Cmd:    task.Cmd.String(),
+		}
+		taskInfos = append(taskInfos, taskInfo)
+		profile.executor.mu.RUnlock()
 	}
 
-	return "[" + strings.Join(jsonStrings, ",") + "]", nil
+	jsonBytes, err := json.Marshal(taskInfos)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonBytes), nil
 }
 
 func (m *Manager) DescribeTask(profileID, taskID int) (string, error) {

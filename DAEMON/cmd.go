@@ -32,6 +32,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager) string {
 		manager.AddProfile(execConfig)
 		return (string("Loaded " + c.flags[0]))
 	case "reload":
+		// Relauch a profile (stop it, reread the config file, launch it again)
 		for index, element := range config {
 			config[index] = *get_config_from_file_name(element.Path)
 		}
@@ -56,6 +57,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager) string {
 		// List profiles
 		return (manager.ListProfiles())
 	case "ls":
+		// List all tasks of a profile
 		result, _ := manager.InfoStatusTasks(0)
 		return result
 	case "help":
