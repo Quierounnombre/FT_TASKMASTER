@@ -42,7 +42,7 @@ func recive_data(sk net.Conn, rl *readline.Instance) {
 			fmt.Println("ERROR_RECIVING_DATA")
 			break
 		}
-		PrintMapRL(msg, rl)
+		reciver(json)
 		rl.Refresh()
 	}
 }

@@ -23,14 +23,16 @@ func (c *Cmd) Parse_cmd(msg *Msg) {
 }
 
 // EXECUTE COMANDS
-func (c *Cmd) Execute(config []File_Config, manager *executor.Manager) string {
+func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg) {
 	switch c.base {
 	case "load":
 		tmp := get_config_from_file_name(c.flags[0])
-		PrintFile_ConfigStruct(*tmp)
 		execConfig := convertToExecutorConfig(*tmp)
-		manager.AddProfile(execConfig)
-		return (string("Loaded " + c.flags[0]))
+		tmp_id := manager.AddProfile(execConfig)
+		msg.add_payload("cmd", "load")
+		msg.add_payload("flags", c.flags[0])
+		msg.add_payload("id", tmp_id)
+		msg.add_payload("task", task)
 	case "reload":
 		// Relauch a profile (stop it, reread the config file, launch it again)
 		tmp := get_config_from_file_name(c.flags[0]) //THERE SHOULD BE A WAY TO TAKE THE FILE PATH
@@ -52,7 +54,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager) string {
 			return (Err)
 		}
 		return result
-	case "lsPf":
+	case "ps":
 		// List profiles
 		return (manager.ListProfiles())
 	case "ls":
@@ -77,11 +79,19 @@ func (c *Cmd) empty_cmd() {
 func cmd_help() string {
 	var str string
 
-	str = string(str + bold + "load" + reset + "	{PATH} load the taskmaster.yaml file in the current dir\n")
-	str = string(str + bold + "reload" + reset + "	reload all the configuration files executing in the taskmaster\n")
-	str = string(str + bold + "stop" + reset + "	{TARGET} stop the target process\n")
-	str = string(str + bold + "start" + reset + "	{TARGET} start the target process\n")
-	str = string(str + bold + "restart" + reset + "	(TARGET) reset the target process, or all of them in case there are no target\n")
-	str = string(str + bold + "help" + reset + "	Show this info")
+	str = string(str + bold + "load" + reset + "	{PATH}		Load a taskmaster.yaml in the provided path\n")
+	str = string(str + bold + "reload" + reset + "	(ID)		Reload the configuration file with the given id\n")
+	str = string(str + bold + "stop" + reset + "	{TARGET}	Stop the target process\n")
+	str = string(str + bold + "start" + reset + "	{TARGET}	Start the target process\n")
+	str = string(str + bold + "restart" + reset + "	{TARGET}	Restart the target process\n")
+	str = string(str + bold + "describe" + reset + "{TARGET}	Describe the target process\n")
+	str = string(str + bold + "ps" + reset + "					List all the profiles and show their id\n")
+	str = string(str + bold + "ls" + reset + "		(ID)		List all the process within a give id\n")
+	str = string(str + bold + "ch" + reset + "		{ID}		Modify the working id\n")
+	str = string(str + bold + "wichid" + reset + "				Print the current id in console\n")
+	str = string(str + bold + "help" + reset + "				Show this info\n")
+	str = string(str + "\n Information in {} is a MUST and can't be skipped\n")
+	str = string(str + "Information in () is a OPTIONAL and the id is the current id\n")
+	str = string(str + "Current id is the the one modify by loading a configuration, or ch\n")
 	return (str)
 }
