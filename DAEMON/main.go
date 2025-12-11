@@ -44,8 +44,8 @@ func loop(sock_config *Sock_Config) {
 			cmd.empty_cmd()
 			PrintMap(msg.content)
 			cmd.Parse_cmd(&msg)
-			tmp := cmd.Execute(file_config, manager)
-			msg.add_payload("response", tmp);
+			cmd.Execute(file_config, manager, msg)
+			msg.add_payload("response");
 			msg.reply()
 			//broadcast_data(sock_config.cons, msg)
 		default:
