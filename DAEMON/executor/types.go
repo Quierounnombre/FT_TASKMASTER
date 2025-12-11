@@ -63,11 +63,39 @@ type Task struct {
 	launchWait        time.Duration
 }
 
+// Executor type
+type Executor struct {
+	mu    sync.RWMutex
+	tasks map[int]*Task
+}
+
+// Manager types
+type Profile struct {
+	ID             int
+	executor       *Executor
+	configFilePath string
+
+}
+
+type Manager struct {
+	mu          sync.RWMutex
+	profiles    map[int]*Profile
+	nextProfile int
+	nextID      int
+	watcher     *Watcher
+}
+
+// Return types
+type ListProfiles struct {
+	ProfileID int    `json:"profileID"`
+	FilePath  string `json:"filePath"`
+}
+
 type TaskInfo struct {
 	TaskID int    `json:"taskID"`
 	Name   string `json:"name"`
 	Status Status `json:"status"`
-	Cmd    string `json:"cmd"`
+	TimeRunning    string `json:"timeRunning"`
 }
 
 type TaskDetail struct {
@@ -85,23 +113,3 @@ type TaskDetail struct {
 	Umask             int      `json:"umask"`
 }
 
-// Executor type
-type Executor struct {
-	mu    sync.RWMutex
-	tasks map[int]*Task
-}
-
-// Manager types
-type Profile struct {
-	ID             int
-	executor       *Executor
-	configFilePath string
-}
-
-type Manager struct {
-	mu          sync.RWMutex
-	profiles    map[int]*Profile
-	nextProfile int
-	nextID      int
-	watcher     *Watcher
-}
