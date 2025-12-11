@@ -24,7 +24,7 @@ func handle_signals(sig os.Signal, config []File_Config, manager *executor.Manag
 	case syscall.SIGHUP:
 		var cmd Cmd
 
-		cmd.Parse_cmd("reload")
+		cmd.base = "reload"
 		cmd.Execute(config, manager)
 	default:
 		os.Exit(1)

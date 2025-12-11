@@ -3,24 +3,23 @@ package main
 import (
 	"fmt"
 	"net"
-	"strings"
+	"encoding/json"
 )
 
 type Msg struct {
 	author  net.Conn
-	content string
+	encoder *json.Encoder
+	content map[string]interface{}
 }
 
 func (m *Msg) clean_content() {
-	m.content = strings.Trim(m.content, "\n") // DATA CLEAN UP
+	m.content = make(map[string]interface{})
 }
 
-func (m *Msg) reply(reply string) {
-	var bytes []byte
+func (m *Msg) reply() {
 	var err error
 
-	bytes = append([]byte(reply), '\n')
-	_, err = m.author.Write(bytes)
+	err = m.encoder.Encode(m.content)
 	if err != nil {
 		fmt.Println("Error socket not working")
 		fmt.Println(err)
@@ -28,6 +27,32 @@ func (m *Msg) reply(reply string) {
 	}
 }
 
-func (m *Msg) print_msg() {
-	fmt.Printf("{\n auth = %v\n content = %s\n}\n", m.author, m.content)
+func (m *Msg) get_cmd() string {
+	var ok		bool
+	var value	string
+
+	value, ok = m.content["cmd"].(string)
+	if (ok) {
+		return (value)
+	}
+	return ("")
+}
+
+func (m *Msg) get_flags() []string {
+	var ok		bool
+	var raw		[]interface{}
+	var flags	[]string
+
+	raw, ok = m.content["flags"].([]interface{})
+	if (ok) {
+		for _, value := range raw {
+			flags = append(flags, value.(string))
+		}
+		return (flags)
+	}
+	return (nil);
+}
+
+func (m *Msg) add_payload(key string, value interface{}) {
+	m.content[key] = value
 }

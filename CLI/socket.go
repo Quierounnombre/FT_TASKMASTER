@@ -4,8 +4,8 @@ import (
 	"net"
 	"os"
 	"fmt"
-	"bufio"
 	"github.com/chzyer/readline"
+	"encoding/json"
 )
 
 func open_socket(socket_path string) net.Conn {
@@ -20,13 +20,10 @@ func open_socket(socket_path string) net.Conn {
 	return (sk)
 }
 
-func send_data(sk net.Conn, str string) {
+func send_data(encoder *json.Encoder, cmd *Cmd) {
 	var err		error
-	var bytes	[]byte	
 
-
-	bytes = []byte(str + "\n")
-	_, err = sk.Write(bytes)
+	err = encoder.Encode(cmd)
 	if (err != nil) {
 		fmt.Println("Error socket not working")
 		os.Exit(1)
@@ -34,18 +31,27 @@ func send_data(sk net.Conn, str string) {
 }
 
 func recive_data(sk net.Conn, rl *readline.Instance) {
-	var reader		*bufio.Reader
-	var msg			string
+	var decoder		*json.Decoder
+	var msg			map[string]interface{}
 	var err			error
 
-	reader = bufio.NewReader(sk)
+	decoder = json.NewDecoder(sk)
 	for (true) {
-		msg, err = reader.ReadString('\n')
+		err = decoder.Decode(&msg)
 		if (err != nil) {
 			fmt.Println("ERROR_RECIVING_DATA")
 			break
 		}
-		rl.Write([]byte(msg))
+		PrintMapRL(msg, rl)
 		rl.Refresh()
 	}
+}
+
+func PrintMapRL(m map[string]interface{}, rl *readline.Instance) {
+    b, err := json.MarshalIndent(m, "", "  ")
+    if err != nil {
+        rl.Write([]byte("Error marshaling map: " + err.Error() + "\n"))
+        return
+    }
+    rl.Write(append(b, '\n'))
 }
