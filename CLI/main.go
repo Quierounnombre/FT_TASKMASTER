@@ -13,6 +13,7 @@ const config_filename = "taskmaster.yaml"
 type Cmd struct {
 	Cmd		string		`json:"cmd"`
 	Flags	[]string	`json:"flags"`
+	Id		int			`json:"id"`
 }
 
 func get_yaml_path() string {

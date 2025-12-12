@@ -30,7 +30,7 @@ func send_data(encoder *json.Encoder, cmd *Cmd) {
 	}
 }
 
-func recive_data(sk net.Conn, rl *readline.Instance) {
+func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int) {
 	var decoder		*json.Decoder
 	var msg			map[string]interface{}
 	var err			error
@@ -42,7 +42,7 @@ func recive_data(sk net.Conn, rl *readline.Instance) {
 			fmt.Println("ERROR_RECIVING_DATA")
 			break
 		}
-		reciver(json)
+		reciver(&msg, rl)
 		rl.Refresh()
 	}
 }
