@@ -1,0 +1,254 @@
+package main
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+	"github.com/chzyer/readline"
+)
+
+func recive_load(json *map[string]interface{}, rl *readline.Instance) {
+	var flag	string
+	var id		int
+	var ok		bool
+
+	flag, ok = (*json)["flags"].(string)
+	if (!ok) {
+		flag = "ERROR MISSING CONTENT"
+	}
+	id, ok = (*json)["id"].(int)
+	if (!ok) {
+		id = -1
+	}
+	rl.Write([]byte("Loaded " + flag + "with id:" + strconv.Itoa(id) + "\n"))
+}
+
+func recive_reload(json *map[string]interface{}, rl *readline.Instance) {
+	var ok		bool
+	var flag	string
+	var id		int
+
+	flag, ok = (*json)["flags"].(string)
+	if (!ok) {
+		flag = "ERROR MISSING CONTENT"
+	}
+	id, ok = (*json)["id"].(int)
+	if (!ok) {
+		id = -1
+	}
+	rl.Write([]byte("Stopped" + flag + "with id:" + strconv.Itoa(id) + "\n"))
+	rl.Write([]byte("Loaded" + flag + "with id:" + strconv.Itoa(id) + "\n"))
+}
+
+func recive_stop(json *map[string]interface{}, rl *readline.Instance) {
+	var ok		bool
+	var id		int
+
+	id, ok = (*json)["id"].(int)
+	if (!ok) {
+		id = -1
+	}
+	rl.Write([]byte("Stopped process with id:" + strconv.Itoa(id) + "\n"))
+}
+
+func recive_start(json *map[string]interface{}, rl *readline.Instance) {
+	var ok		bool
+	var id		int
+
+	id, ok = (*json)["id"].(int)
+	if (!ok) {
+		id = -1
+	}
+	rl.Write([]byte("Started process with process id: " + strconv.Itoa(id) + "\n"));
+}
+
+func recive_restart(json *map[string]interface{}, rl *readline.Instance) {
+	var ok		bool
+	var id		int
+
+	id, ok = (*json)["id"].(int)
+	if (!ok) {
+		id = -1
+	}
+	rl.Write([]byte("Stopped process with process id: " + strconv.Itoa(id) + "\n"));
+	rl.Write([]byte("Started process with process id: " + strconv.Itoa(id) + "\n"));
+}
+
+func recive_describe(json *map[string]interface{}, rl *readline.Instance) {
+	var fields	[]string
+	var add		func(string)
+	var b		strings.Builder
+	var key		string
+	var value	interface{}
+	var env		[]interface{}
+
+	add = func(key string) {
+		b.WriteString(fmt.Sprintf("%-17s: %v\n", key, (*json)[key]))
+	}
+	fields = []string {
+		"ID",
+		"Name",
+		"Status",
+		"ExitCode",
+		"RestartCount",
+		"MaxRestarts",
+		"StartTime",
+		"WorkingDir",
+		"Env",
+		"ExpectedExitCodes",
+		"Umask",
+		"restartPolicy",
+		"launchWait",
+		"Cmd",
+		"StdoutWriter",
+		"StderrWriter",
+	}
+	for _, key = range fields {
+		if (key == "Env") {
+			b.WriteString(fmt.Sprintf("%-17s:\n", key))
+			env, _ = (*json)[key].([]interface{})
+			for _, value = range env {
+				b.WriteString(fmt.Sprintf("  - %v\n", value))
+			}
+		} else {
+			add(key)
+		}
+	}
+	rl.Write([]byte(b.String()))
+}
+
+func recive_error(json *map[string]interface{}, rl *readline.Instance) {
+	var ok		bool
+	var flag	string
+
+	flag, ok = (*json)["flags"].(string)
+	if (!ok) {
+		flag = "ERROR MISSING CONTENT"
+	}
+	rl.Write([]byte("Error: " + flag + "\n"));
+}
+
+func recive_ps(json *map[string]interface{}, rl *readline.Instance) {
+	var ok		bool
+	var path	string
+	var key		string
+	var prcs	map[string]interface{}
+
+	prcs, ok = (*json)["prcs"].(map[string]interface{})
+	if (!ok) {
+        prcs = nil
+	}
+	rl.Write([]byte("+------+------------------------------+\n"))
+	rl.Write([]byte("| ID   | path                         |\n"))
+	rl.Write([]byte("+------+------------------------------+\n"))
+	for key, _ = range prcs {
+		path, ok = prcs["path"].(string)
+		if (!ok) {
+			path = "ERROR MISSING CONTENT"
+		}
+ 		rl.Write([]byte(
+			fmt.Sprintf("| %-4s | %-28s |\n", key, path),
+		))
+	}
+	rl.Write([]byte("+------+------------------------------+\n"))
+}
+
+func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
+	var ok			bool
+	var proc_lst	[]interface{}
+	var proc		map[string]interface{}
+	var id			int
+	var name		string
+	var status		string
+	var ts			string
+	var obj			interface{}
+
+	rl.Write([]byte("+----+------------+--------+-----------------------|\n"))
+	rl.Write([]byte("| ID | Name       | Status | Timestamp             |\n"))
+	rl.Write([]byte("+----+------------+--------+-----------------------|\n"))
+	proc_lst, ok = (*json)["procs"].([]interface{})
+	if (!ok) {
+         proc_lst = nil
+	}
+	for _, obj = range proc_lst {
+		proc, ok = obj.(map[string]interface{})
+		if (!ok) {
+			proc = nil
+		}
+		id, ok = proc["id"].(int)
+		if !ok {
+			id = -1
+		}
+		name, ok = proc["name"].(string)
+		if !ok {
+			name = "Null"
+		}
+		status, ok = proc["status"].(string)
+		if !ok {
+			status = "Null"
+		}
+		ts, ok = proc["timestamp"].(string)
+		if !ok {
+			ts = "Null"
+		}
+		rl.Write([]byte(fmt.Sprintf("| %-4s | %-12s | %-8s | %-24s |\n", strconv.Itoa(id), name, status, ts)))
+	}
+	rl.Write([]byte("+----+------------+--------+-----------------------|\n"))
+}
+
+func recive_kill(json *map[string]interface{}, rl *readline.Instance) {
+	var ok		bool
+	var id		int
+
+	id, ok = (*json)["id"].(int)
+	if (!ok) {
+		id = -1
+	}
+	rl.Write([]byte("Killed process with id: " + strconv.Itoa(id) + "\n"));
+}
+
+func recive_ch(json *map[string]interface{}, rl *readline.Instance) {
+	var ok		bool
+	var id		int
+
+	id, ok = (*json)["id"].(int)
+	if (!ok) {
+		id = -1
+	}
+	rl.Write([]byte("Switched to id: " + strconv.Itoa(id) + "\n"));
+}
+
+func reciver(json *map[string]interface{}, rl *readline.Instance) {
+	var ok		bool
+	var cmd		string
+
+	cmd, ok = (*json)["cmd"].(string)
+	if (!ok) {
+		rl.Write([]byte("ERROR CMD NOT FOUND"))
+		return
+	}
+	switch cmd {
+	case "load":
+		recive_load(json, rl)
+	case "reload":
+		recive_reload(json, rl)
+	case "stop":
+		recive_stop(json, rl)
+	case "start":
+		recive_start(json, rl)
+	case "restart":
+		recive_restart(json, rl)
+	case "describe":
+		recive_describe(json, rl)
+	case "error":
+		recive_error(json, rl)
+	case "ps":
+		recive_ps(json, rl)
+	case "ls":
+		recive_ls(json, rl)
+	case "kill":
+		recive_kill(json, rl)
+	case "ch":
+		recive_ch(json, rl)
+	}
+}

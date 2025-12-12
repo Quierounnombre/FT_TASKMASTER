@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"net"
 	"os"
+	"encoding/json"
 )
 
 type Sock_Config struct {
@@ -60,14 +60,15 @@ func remove_closed_client(target_conn net.Conn, config *Sock_Config) {
 
 // HANDLE THE CLIENT RECIVING DATA
 func handle_client(conn net.Conn, ch chan Msg, config *Sock_Config) {
-	var reader *bufio.Reader
+	var decoder *json.Decoder
 	var msg Msg
 	var err error
 
 	msg.author = conn
-	reader = bufio.NewReader(conn)
+	msg.encoder = json.NewEncoder(conn)
+	decoder = json.NewDecoder(conn)
 	for true {
-		msg.content, err = reader.ReadString('\n')
+		err = decoder.Decode(&msg.content)
 		if err != nil {
 			remove_closed_client(conn, config)
 			conn.Close()
@@ -78,7 +79,6 @@ func handle_client(conn net.Conn, ch chan Msg, config *Sock_Config) {
 			fmt.Println("ERROR_RECIVING_DATA")
 			break
 		}
-		msg.clean_content()
 		ch <- msg
 	}
 }
