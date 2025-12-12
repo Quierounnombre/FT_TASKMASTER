@@ -80,21 +80,47 @@ func recive_restart(json *map[string]interface{}) {
 	rl.Write([]byte("Started process with process id: " + id + "\n"));
 }
 
-//NEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEED CONTENT
 func recive_describe(json *map[string]interface{}) {
-	var ok		bool
-	var flag	string
-	var id		int
+	var fields	[]string
+	var add		func(string)
+	var b		strings.Builder
+	var key		string
+	var value	string
+	var env		[]interface{}
 
-	flag, ok = json["flags"].(string)
-	if (!ok) {
-		flag = "ERROR MISSING CONTENT"
+	add = func(key string) {
+		b.WriteString(fmt.Sprintf("%-17s: %v\n", key, m[key]))
 	}
-	id, ok = json["id"].(int)
-	if (!ok) {
-		id = -1
+	fields = []string {
+		"ID",
+		"Name",
+		"Status",
+		"ExitCode",
+		"RestartCount",
+		"MaxRestarts",
+		"StartTime",
+		"WorkingDir",
+		"Env",
+		"ExpectedExitCodes",
+		"Umask",
+		"restartPolicy",
+		"launchWait",
+		"Cmd",
+		"StdoutWriter",
+		"StderrWriter",
 	}
-	rl.Write([]byte("Error: " + flag + "\n"));
+	for _, key = range fields {
+		if (key == "Env") {
+			b.WriteString(fmt.Sprintf("%-17s:\n", key))
+			env, _ = json[key].([]interface{})
+			for _, value = range env {
+				b.WriteString(fmt.Sprintf("  - %v\n", v)
+			}
+		} else {
+			add(key)
+		}
+	}
+	rl.Write([]byte(b.String()))
 }
 
 func recive_error(json *map[string]interface{}) {
@@ -181,20 +207,15 @@ func recive_ls(json *map[string]interface{}) {
 	rl.Write([]byte("+----+------------+--------+-----------------------|\n"))
 }
 
-func recive_help(json *map[string]interface{}) {
+func recive_kill(json *map[string]interface{}) {
 	var ok		bool
-	var flag	string
 	var id		int
 
-	flag, ok = json["flags"].(string)
-	if (!ok) {
-		flag = "ERROR MISSING CONTENT"
-	}
 	id, ok = json["id"].(int)
 	if (!ok) {
 		id = -1
 	}
-	rl.Write([]byte("Error: " + flag + "\n"));
+	rl.Write([]byte("Killed process with id: " + id + "\n"));
 }
 
 //ADD KILL
@@ -221,7 +242,7 @@ func reciver(json *map[string]interface{}) {
 		recive_ps(json)
 	case "ls":
 		recive_ls(json)
-	case "help":
-		recive_help(json)
+	case "kill":
+		recive_kill(json)
 	}
 }
