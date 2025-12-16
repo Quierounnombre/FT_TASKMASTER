@@ -7,7 +7,7 @@ import (
 	"github.com/chzyer/readline"
 )
 
-func recive_load(json *map[string]interface{}, rl *readline.Instance) {
+func recive_load(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
 	var flag	string
 	var id		int
 	var ok		bool
@@ -21,6 +21,7 @@ func recive_load(json *map[string]interface{}, rl *readline.Instance) {
 		id = -1
 	}
 	if (id != -1) {
+		*profile_id = id
 		rl.Write([]byte("Loaded " + flag + "with id:" + strconv.Itoa(id) + "\n"))
 	} else {
 		rl.Write([]byte("Profile couldn't be loaded\n"))
@@ -259,7 +260,7 @@ func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *in
 	}
 	switch cmd {
 	case "load":
-		recive_load(json, rl)
+		recive_load(json, rl, profile_id)
 	case "reload":
 		recive_reload(json, rl)
 	case "stop":

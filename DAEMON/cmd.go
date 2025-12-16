@@ -6,9 +6,10 @@ import (
 )
 
 type Cmd struct {
-	base  string
-	flags []string
-	err   bool
+	base		string
+	flags		[]string
+	profile_id	int
+	err			bool
 }
 
 // Parses the cmd and do all the data cleanup
@@ -16,6 +17,7 @@ func (c *Cmd) Parse_cmd(msg *Msg) {
 	c.base = msg.get_cmd()
 	fmt.Println("base =", c.base)
 	c.flags = msg.get_flags()
+	c.profile_id = msg.get_profile_id()
 	msg.clean_content()
 }
 

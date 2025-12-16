@@ -11,9 +11,9 @@ const socket_path = "/run/taskmaster.sock"
 const config_filename = "taskmaster.yaml"
 
 type Cmd struct {
-	Cmd		string		`json:"cmd"`
-	Flags	[]string	`json:"flags"`
-	Id		int			`json:"id"`
+	Cmd			string		`json:"cmd"`
+	Flags		[]string	`json:"flags"`
+	profile_id	int			`json:"profile_id"`
 }
 
 func get_yaml_path() string {

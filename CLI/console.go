@@ -49,7 +49,7 @@ func	console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 		}
 		if (!local_cmds(profile_id, line, rl)) {
 			cmd.Cmd = line
-			cmd.Id = *profile_id
+			cmd.profile_id = *profile_id
 			send_data(encoder, &cmd)
 		}
 	}
