@@ -92,10 +92,10 @@ type ListProfiles struct {
 }
 
 type TaskInfo struct {
-	TaskID int    `json:"taskID"`
-	Name   string `json:"name"`
-	Status Status `json:"status"`
-	TimeRunning    string `json:"timeRunning"`
+	TaskID 		int    `json:"taskID"`
+	Name   		string `json:"name"`
+	Status 		Status `json:"status"`
+	TimeRunning string `json:"timeRunning"`
 }
 
 type TaskDetail struct {
@@ -111,5 +111,6 @@ type TaskDetail struct {
 	WorkingDir        string   `json:"workingDir"`
 	ExpectedExitCodes []int    `json:"expectedExitCodes"`
 	Umask             int      `json:"umask"`
+	RestartPolicy	  string   `json:"restartPolicy"`
 }
 

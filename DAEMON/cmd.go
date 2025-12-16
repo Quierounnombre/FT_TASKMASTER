@@ -36,29 +36,31 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager) string {
 		tmp := get_config_from_file_name(c.flags[0]) //THERE SHOULD BE A WAY TO TAKE THE FILE PATH
 		PrintFile_ConfigStruct(*tmp)
 		manager.ReloadProfile(*tmp, 0) //LOOK OUT 0 IS NOT A DINAMIC SELECTED PROFILE
-		return ("Configurations reloaded")
+		return ("Configuration reloaded")
 	case "stop":
-		//CHECK FOR AVAILABLE PROCESS HERE?
-		// We would do manager.Stop(profileID, taskID) but this is TMP
+		manager.Stop(profileID, taskID) but this is TMP
 		return (string("Stoped " + c.flags[0]))
 	case "start":
-		//CHECK FOR AVAILABLE PROCESS HERE?
-		// We would do manager.Start(profileID, taskID) but this is TMP
+		manager.Start(profileID, taskID)
 		return (string("Started " + c.flags[0]))
 	case "restart":
-		if len(c.flags) > 0 {
-			return (string("Restarted " + c.flags[0]))
-		}
+		manager.Restart(profileID, taskID)
 		return (string("Restarting all programs"))
 	case "describe":
-		result, _ := manager.DescribeTask(0, 0)
+		result, Err := manager.DescribeTask(0, 0)
+		if Err != nil {
+			return (Err)
+		}
 		return result
 	case "lsPf":
 		// List profiles
 		return (manager.ListProfiles())
 	case "ls":
 		// List all tasks of a profile
-		result, _ := manager.InfoStatusTasks(0)
+		result, Err := manager.InfoStatusTasks(0)
+		if Err != nil {
+			return (Err)
+		}
 		return result
 	case "help":
 		return (cmd_help())

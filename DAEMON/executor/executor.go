@@ -192,6 +192,16 @@ func (e *Executor) Kill(id int) error {
 	return nil
 }
 
+func (e *Executor) Restart(id int) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	task, exists := e.tasks[id]
+
+	
+
+	return nil
+}
+
 func (e *Executor) ListTasks() []int {
 	e.mu.RLock()
 	defer e.mu.RUnlock()

@@ -154,7 +154,6 @@ func (m *Manager) InfoStatusTasks(profileID int) ([]TaskInfo, error) {
 }
 
 func (m *Manager) DescribeTask(profileID, taskID int) (*TaskDetail, error) {
-	// TODO: DALE TODO menos stdout, stderr
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
@@ -188,6 +187,7 @@ func (m *Manager) DescribeTask(profileID, taskID int) (*TaskDetail, error) {
 		WorkingDir:        task.WorkingDir,
 		ExpectedExitCodes: task.ExpectedExitCodes,
 		Umask:             task.Umask,
+		RestartPolicy:	   task.restartPolicy,
 	}
 	profile.executor.mu.RUnlock()
 	
@@ -236,4 +236,15 @@ func (m *Manager) Kill(profileID, taskID int) error {
 		return fmt.Errorf("profile %d not found", profileID)
 	}
 	return profile.executor.Kill(taskID)
+}
+
+func (m *Manager) Restart(profileID, taskID int) error {
+	m.mu.RLock()
+	profile, exists := m.profiles[profileID]
+	m.mu.RUnlock()
+
+	if !exists {
+		return fmt.Errorf("profile %d not found", profileID)
+	}
+	return profile.executor.Restart(taskID)
 }
