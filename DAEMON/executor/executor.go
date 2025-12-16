@@ -152,6 +152,39 @@ func (e *Executor) GetStatus(id int) (Status, error) {
 	return task.Status, nil
 }
 
+func (e *Executor) GetTaskDetail(id int) *TaskDetail {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	task, exists := e.tasks[id]
+	if !exists {
+		fmt.Errorf("task %d not found", taskID)
+		return nil
+	}
+
+	startTimeStr := ""
+	if !task.StartTime.IsZero() {
+		startTimeStr = task.StartTime.Format("2006-01-02T15:04:05Z07:00")
+	}
+	
+	taskDetail := &TaskDetail{
+		ID:                task.ID,
+		Name:              task.Name,
+		Cmd:               task.Cmd.String(),
+		Status:            task.Status,
+		ExitCode:          task.ExitCode,
+		RestartCount:      task.RestartCount,
+		MaxRestarts:       task.MaxRestarts,
+		StartTime:         startTimeStr,
+		Env:               task.Env,
+		WorkingDir:        task.WorkingDir,
+		ExpectedExitCodes: task.ExpectedExitCodes,
+		Umask:             task.Umask,
+		RestartPolicy:	   task.restartPolicy,
+	}
+	return taskDetail
+}
+
 func (e *Executor) Stop(id int) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()

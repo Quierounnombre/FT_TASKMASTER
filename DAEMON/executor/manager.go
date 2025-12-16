@@ -109,24 +109,26 @@ func (m *Manager) ListProfiles() []ListProfiles {
 }
 
 // Task Management
-func (m *Manager) ListTasks(profileID int) ([]int, error) {
+func (m *Manager) ListTasks(profileID int) []int {
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
 
 	if !exists {
-		return nil, fmt.Errorf("profile %d not found", profileID)
+		fmt.Errorf("profile %d not found", profileID)
+		return nil
 	}
-	return profile.executor.ListTasks(), nil
+	return profile.executor.ListTasks()
 }
 
-func (m *Manager) InfoStatusTasks(profileID int) ([]TaskInfo, error) {
+func (m *Manager) InfoStatusTasks(profileID int) []TaskInfo {
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
 
 	if !exists {
-		return nil, fmt.Errorf("profile %d not found", profileID)
+		fmt.Errorf("profile %d not found", profileID)
+		return nil
 	}
 
 	taskIDs := profile.executor.ListTasks()
@@ -150,48 +152,20 @@ func (m *Manager) InfoStatusTasks(profileID int) ([]TaskInfo, error) {
 		profile.executor.mu.RUnlock()
 	}
 
-	return taskInfos, nil
+	return taskInfos
 }
 
-func (m *Manager) DescribeTask(profileID, taskID int) (*TaskDetail, error) {
+func (m *Manager) DescribeTask(profileID, taskID int) *TaskDetail {
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
 
 	if !exists {
-		return nil, fmt.Errorf("profile %d not found", profileID)
+		fmt.Errorf("profile %d not found", profileID)
+		return nil
 	}
 	
-	profile.executor.mu.RLock()
-	task, exists := profile.executor.tasks[taskID]
-	if !exists {
-		profile.executor.mu.RUnlock()
-		return nil, fmt.Errorf("task %d not found", taskID)
-	}
-	
-	startTimeStr := ""
-	if !task.StartTime.IsZero() {
-		startTimeStr = task.StartTime.Format("2006-01-02T15:04:05Z07:00")
-	}
-	
-	taskDetail := &TaskDetail{
-		ID:                task.ID,
-		Name:              task.Name,
-		Cmd:               task.Cmd.String(),
-		Status:            task.Status,
-		ExitCode:          task.ExitCode,
-		RestartCount:      task.RestartCount,
-		MaxRestarts:       task.MaxRestarts,
-		StartTime:         startTimeStr,
-		Env:               task.Env,
-		WorkingDir:        task.WorkingDir,
-		ExpectedExitCodes: task.ExpectedExitCodes,
-		Umask:             task.Umask,
-		RestartPolicy:	   task.restartPolicy,
-	}
-	profile.executor.mu.RUnlock()
-	
-	return taskDetail, nil
+	return profile.executor.GetTaskDetail(taskID)
 }
 
 func (m *Manager) GetStatus(profileID, taskID int) (Status, error) {

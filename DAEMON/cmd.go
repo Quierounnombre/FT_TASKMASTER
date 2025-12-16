@@ -25,42 +25,42 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 	case "load":
 		tmp := get_config_from_file_name(c.flags[0])
 		execConfig := convertToExecutorConfig(*tmp)
-		tmp_id := manager.AddProfile(execConfig)
 		msg.add_payload("cmd", "load")
 		msg.add_payload("flags", c.flags[0])
-		msg.add_payload("id", tmp_id)
+		msg.add_payload("id", manager.AddProfile(execConfig))
 		msg.add_payload("task", task)
 	case "reload":
 		// Relauch a profile (stop it, reread the config file, launch it again)
-		tmp := get_config_from_file_name(c.flags[0]) //THERE SHOULD BE A WAY TO TAKE THE FILE PATH
+		tmp := get_config_from_file_name(c.flags[0])
 		PrintFile_ConfigStruct(*tmp)
 		manager.ReloadProfile(*tmp, 0) //LOOK OUT 0 IS NOT A DINAMIC SELECTED PROFILE
-		return ("Configuration reloaded")
+		msg.add_payload("cmd", "reload")
+		msg.add_payload("flags", c.flags[0])
+		msg.add_payload("id", manager.AddProfile(execConfig))
+		msg.add_payload("task", task)
 	case "stop":
-		manager.Stop(profileID, taskID) but this is TMP
-		return (string("Stoped " + c.flags[0]))
+		msg.add_payload("id", manager.Stop(c.flags[0]/*TMP: this will be a msg variable*/, c.flags[0])) // profileID and taskID)
 	case "start":
-		manager.Start(profileID, taskID)
-		return (string("Started " + c.flags[0]))
+		msg.add_payload("id", manager.Start(c.flags[0]/*TMP: this will be a msg variable*/, c.flags[0])) // profileID and taskID
 	case "restart":
-		manager.Restart(profileID, taskID)
-		return (string("Restarting all programs"))
+		msg.add_payload("id", manager.Restart(c.flags[0]/*TMP: this will be a msg variable*/, c.flags[0])) // profileID and taskID
+	case "kill":
+		msg.add_payload("id", manager.Kill(c.flags[0]/*TMP: this will be a msg variable*/, c.flags[0])) // profileID and taskID
 	case "describe":
-		result, Err := manager.DescribeTask(0, 0)
-		if Err != nil {
-			return (Err)
-		}
-		return result
+		msg.add_payload("task", manager.DescribeTask(c.flags[0]/*TMP: this will be a msg variable*/, c.flags[0])) // profileID and taskID
 	case "ps":
 		// List profiles
 		return (manager.ListProfiles())
 	case "ls":
 		// List all tasks of a profile
-		result, Err := manager.InfoStatusTasks(0)
+		result, Err := manager.InfoStatusTasks(c.flags[0])
 		if Err != nil {
 			return (Err)
 		}
 		return result
+	case "ch":
+		// Change current profile
+
 	case "help":
 		return (cmd_help())
 	}
