@@ -74,7 +74,6 @@ type Profile struct {
 	ID             int
 	executor       *Executor
 	configFilePath string
-
 }
 
 type Manager struct {
