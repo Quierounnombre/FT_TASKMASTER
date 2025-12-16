@@ -53,6 +53,17 @@ func (m *Msg) get_flags() []string {
 	return (nil);
 }
 
+func (m *Msg) get_profile_id() int {
+	var ok			bool
+	var profile_id	int
+
+	profile_id, ok = m.content["profile_id"].(int)
+	if (ok) {
+		return (value)
+	}
+	return (-1)
+}
+
 func (m *Msg) add_payload(key string, value interface{}) {
 	m.content[key] = value
 }
