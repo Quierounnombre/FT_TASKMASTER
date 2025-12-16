@@ -21,6 +21,17 @@ func (m *Manager) Shutdown() {
 	}
 }
 
+func (m *Manager) CheckProfileExists(profileID int) int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	_, exists := m.profiles[profileID]
+	if !exists {
+		return -1
+	}
+	return profileID
+}
+
 // Profile Management
 func (m *Manager) AddProfile(config File_Config) int {
 	m.mu.Lock()
@@ -131,28 +142,7 @@ func (m *Manager) InfoStatusTasks(profileID int) []TaskInfo {
 		return nil
 	}
 
-	taskIDs := profile.executor.ListTasks()
-	taskInfos := make([]TaskInfo, 0, len(taskIDs))
-	
-	for _, taskID := range taskIDs {
-		profile.executor.mu.RLock()
-		task, exists := profile.executor.tasks[taskID]
-		if !exists {
-			profile.executor.mu.RUnlock()
-			continue
-		}
-		
-		taskInfo := TaskInfo{
-			TaskID: task.ID,
-			Name:   task.Name,
-			Status: task.Status,
-			TimeRunning: task.StartTime,
-		}
-		taskInfos = append(taskInfos, taskInfo)
-		profile.executor.mu.RUnlock()
-	}
-
-	return taskInfos
+	return profile.executor.InfoStatusTasks()
 }
 
 func (m *Manager) DescribeTask(profileID, taskID int) *TaskDetail {

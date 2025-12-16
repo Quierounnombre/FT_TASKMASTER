@@ -246,6 +246,17 @@ func (e *Executor) ListTasks() []int {
 	return ids
 }
 
+func (e *Executor) InfoStatusTasks() []TaskInfo {
+	taskIDs := e.ListTasks()
+	tasksInfo := make([]TaskInfo, 0, len(taskIDs))
+	
+	for _, taskID := range taskIDs {
+		info, exists := e.GetTaskInfo(taskID)
+		tasksInfo = append(tasksInfo, info)
+	}
+	return tasksInfo
+}
+
 func (e *Executor) GetTaskInfo(id int) (string, error) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
