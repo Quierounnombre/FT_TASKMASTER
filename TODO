@@ -26,6 +26,11 @@ Settear wrapper the cmds
 
 
 ----> PABLETO PARTE <----
+TODO:
+- logs!
+- give back errors
+- refactor code (there are repeated shit)
+
 Executor:
 
 ✅ Options to discard the program’s stdout/stderr or to redirect them to files
@@ -42,7 +47,7 @@ Upper manager:
 
 
 
-
+Old status:
 Hasta ahora lo que hemos hecho son un manager que tiene profiles (cada archivo de configuracion)
 Solo tiene que inicializar un Task para un executor.
 La idea es que cada task tenga toda la configuracion de un proceso a ejecutar!
@@ -50,30 +55,7 @@ Hecho esto habria que testear y empezar con las tareas pendientes de arriba!
 listas procesos, perfiles... cargarse un perfil... Y UN VIGILANTE! <-
 
 
-prompt del Vigilante:
-Constantly watches running processes - monitoring their state, health, and behavior
-
-Reports with Vigilante-style commentary - things like:
-"Dude, seriously? Process nginx just crashed AGAIN!"
-"I'm watching you, process worker-1... don't even THINK about dying on me"
-"Process api-server has been running for 3 hours straight. Respect."
-"Oh great, process database is using 95% CPU. That's just PERFECT."
-"Process cache-server stopped responding. Time to take out the trash."
-
-Triggers restart policies - when it detects a process has died or is misbehaving, it would:
-Check the restart policy (always/never/on-unexpected-exits)
-Verify exit codes against expected values
-Enforce the "successfully started" time threshold
-Coordinate with the Executor to restart if needed
-Maintains vigilance logs - keeping track of:
-Process uptime
-Restart counts
-Health check results
-Resource usage anomalies
-
-The Vigilante would sit between your Manager and Executors, constantly polling or receiving events about process state changes, and making decisions about what actions to take - all while providing sarcastic, Vigilante-style status updates in the logs.
-
-
+Explicacion:
 manager has:
 profiles
 each profile has an Executor pointer containing all executions

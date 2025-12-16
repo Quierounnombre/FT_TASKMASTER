@@ -3,6 +3,7 @@ package main
 import (
 	"taskmaster-daemon/executor"
 	"fmt"
+	"strconv"
 )
 
 type Cmd struct {
@@ -30,27 +31,34 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 		execConfig := convertToExecutorConfig(*tmp)
 		msg.add_payload("cmd", "load")
 		msg.add_payload("flags", c.flags[0])
-		msg.add_payload("id", manager.AddProfile(execConfig))
-		msg.add_payload("task", task)
+		newProfileID := manager.AddProfile(execConfig)
+		msg.add_payload("id", newProfileID)
+		msg.add_payload("task", manager.InfoStatusTasks(newProfileID))
 	case "reload":
 		// Relauch a profile (stop it, reread the config file, launch it again)
 		tmp := get_config_from_file_name(c.flags[0])
 		PrintFile_ConfigStruct(*tmp) //temporary
 		execConfig := convertToExecutorConfig(*tmp)
+		profileID, _ := strconv.Atoi(c.flags[0])
 		msg.add_payload("cmd", "reload")
 		msg.add_payload("flags", c.flags[0])
-		msg.add_payload("id", manager.ReloadProfile(execConfig, c.flags[0]))
-		msg.add_payload("task", task)
+		msg.add_payload("id", manager.ReloadProfile(execConfig, profileID))
+		msg.add_payload("task", manager.InfoStatusTasks(profileID))
 	case "stop":
-		msg.add_payload("id", manager.Stop(c.profile_id, c.flags[0])) // profileID and taskID)
+		taskID, _ := strconv.Atoi(c.flags[0])
+		msg.add_payload("id", manager.Stop(c.profile_id, taskID)) // profileID and taskID)
 	case "start":
-		msg.add_payload("id", manager.Start(c.profile_id, c.flags[0])) // profileID and taskID
+		taskID, _ := strconv.Atoi(c.flags[0])
+		msg.add_payload("id", manager.Start(c.profile_id, taskID)) // profileID and taskID
 	case "restart":
-		msg.add_payload("id", manager.Restart(c.profile_id, c.flags[0])) // profileID and taskID
+		taskID, _ := strconv.Atoi(c.flags[0])
+		msg.add_payload("id", manager.Restart(c.profile_id, taskID)) // profileID and taskID
 	case "kill":
-		msg.add_payload("id", manager.Kill(c.profile_id, c.flags[0])) // profileID and taskID
+		taskID, _ := strconv.Atoi(c.flags[0])
+		msg.add_payload("id", manager.Kill(c.profile_id, taskID)) // profileID and taskID
 	case "describe":
-		msg.add_payload("task", manager.DescribeTask(c.profile_id, c.flags[0])) // profileID and taskID
+		taskID, _ := strconv.Atoi(c.flags[0])
+		msg.add_payload("task", manager.DescribeTask(c.profile_id, taskID)) // profileID and taskID
 	case "ps":
 		// List profiles
 		msg.add_payload("profiles", manager.ListProfiles())
@@ -59,9 +67,8 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 		msg.add_payload("procs", manager.InfoStatusTasks(c.profile_id))
 	case "ch":
 		// Change current profile
-		msg.add_payload("id", manager.CheckProfileExists(c.flags[0])) // profileID
-	case "help":
-		return (cmd_help())
+		profileID, _ := strconv.Atoi(c.flags[0])
+		msg.add_payload("id", manager.CheckProfileExists(profileID)) // profileID
 	default:
 		msg.add_payload("error", "Unknown command: "+c.base)
 	}

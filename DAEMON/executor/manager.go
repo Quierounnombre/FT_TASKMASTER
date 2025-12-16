@@ -76,13 +76,14 @@ func (m *Manager) RemoveProfile(profileID int) error {
 	return nil
 }
 
-func (m *Manager) ReloadProfile(config File_Config, profileID int) error {
+func (m *Manager) ReloadProfile(config File_Config, profileID int) int {
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
 
 	if !exists {
-		return fmt.Errorf("profile %d not found", profileID)
+		fmt.Errorf("profile %d not found", profileID)
+		return -1
 	}
 
 	profile.executor.mu.Lock()
@@ -102,7 +103,7 @@ func (m *Manager) ReloadProfile(config File_Config, profileID int) error {
 	profile.executor = newExecutor
 	m.mu.Unlock()
 
-	return nil
+	return profileID
 }
 
 func (m *Manager) ListProfiles() []ListProfiles {
@@ -110,7 +111,7 @@ func (m *Manager) ListProfiles() []ListProfiles {
 	defer m.mu.RUnlock()
 
 	profileIDs := make([]ListProfiles, 0, len(m.profiles))
-	for id, profile := range m.profiles {
+	for _, profile := range m.profiles {
 		profileIDs = append(profileIDs, ListProfiles{
 			ProfileID: profile.ID,
 			FilePath:  profile.configFilePath,
@@ -132,7 +133,7 @@ func (m *Manager) ListTasks(profileID int) []int {
 	return profile.executor.ListTasks()
 }
 
-func (m *Manager) InfoStatusTasks(profileID int) []TaskInfo {
+func (m *Manager) InfoStatusTasks(profileID int) []*TaskInfo {
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
@@ -169,46 +170,50 @@ func (m *Manager) GetStatus(profileID, taskID int) (Status, error) {
 	return profile.executor.GetStatus(taskID)
 }
 
-func (m *Manager) Start(profileID, taskID int) error {
+func (m *Manager) Start(profileID, taskID int) int {
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
 
 	if !exists {
-		return fmt.Errorf("profile %d not found", profileID)
+		fmt.Errorf("profile %d not found", profileID)
+		return -1
 	}
 	return profile.executor.Start(taskID)
 }
 
-func (m *Manager) Stop(profileID, taskID int) error {
+func (m *Manager) Stop(profileID, taskID int) int {
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
 
 	if !exists {
-		return fmt.Errorf("profile %d not found", profileID)
+		fmt.Errorf("profile %d not found", profileID)
+		return -1
 	}
 	return profile.executor.Stop(taskID)
 }
 
-func (m *Manager) Kill(profileID, taskID int) error {
+func (m *Manager) Kill(profileID, taskID int) int {
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
 
 	if !exists {
-		return fmt.Errorf("profile %d not found", profileID)
+		fmt.Errorf("profile %d not found", profileID)
+		return -1
 	}
 	return profile.executor.Kill(taskID)
 }
 
-func (m *Manager) Restart(profileID, taskID int) error {
+func (m *Manager) Restart(profileID, taskID int) int {
 	m.mu.RLock()
 	profile, exists := m.profiles[profileID]
 	m.mu.RUnlock()
 
 	if !exists {
-		return fmt.Errorf("profile %d not found", profileID)
+		fmt.Errorf("profile %d not found", profileID)
+		return -1
 	}
 	return profile.executor.Restart(taskID)
 }

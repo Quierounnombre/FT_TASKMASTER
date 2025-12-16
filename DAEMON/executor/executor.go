@@ -1,11 +1,9 @@
 package executor
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os/exec"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -87,20 +85,16 @@ func (e *Executor) initTask(process Process, nextID *int) {
 	}
 }
 
-func (e *Executor) Start(id int) error {
+func (e *Executor) Start(id int) int {
 	e.mu.Lock()
 	task, exists := e.tasks[id]
 	if !exists {
 		e.mu.Unlock()
-		return fmt.Errorf("task %d not found", id)
+		fmt.Errorf("task %d not found", id)
+		return -1
 	}
 
-	if task.Status != StatusPending {
-		e.mu.Unlock()
-		return fmt.Errorf("task %d is not pending", id)
-	}
-
-	task.Status = StatusRunning
+	task.Status = StatusPending
 	task.StartTime = time.Now()
 
 	e.mu.Unlock()
@@ -116,22 +110,19 @@ func (e *Executor) Start(id int) error {
 				task.ExitCode = status.ExitStatus()
 			}
 		}
-	} else {
-		task.ExitCode = 0
-	}
-
-	if e.isExpectedExitCode(task) {
-		task.Status = StatusStopped
-	} else {
 		task.Status = StatusFailed
+		return -1
+	} else {
+		task.Status = StatusSuccess
 	}
 
-	return nil
+	return id
 }
 
 func (e *Executor) isExpectedExitCode(task *Task) bool {
+	// Checks if exit status is in expected exit codes
 	if task.ExpectedExitCodes == nil {
-		return task.ExitCode == 0
+		return true
 	}
 	for _, code := range task.ExpectedExitCodes {
 		if task.ExitCode == code {
@@ -158,7 +149,7 @@ func (e *Executor) GetTaskDetail(id int) *TaskDetail {
 
 	task, exists := e.tasks[id]
 	if !exists {
-		fmt.Errorf("task %d not found", taskID)
+		fmt.Errorf("task %d not found", id)
 		return nil
 	}
 
@@ -185,54 +176,61 @@ func (e *Executor) GetTaskDetail(id int) *TaskDetail {
 	return taskDetail
 }
 
-func (e *Executor) Stop(id int) error {
+func (e *Executor) Stop(id int) int {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	task, exists := e.tasks[id]
 	if !exists {
-		return fmt.Errorf("task %d not found", id)
+		fmt.Errorf("task %d not found", id)
+		return -1
 	}
 
 	if task.Status != StatusRunning {
-		return fmt.Errorf("task %d is not running", id)
+		fmt.Errorf("task %d is not running", id)
+		return -1
 	}
 
 	if err := task.Cmd.Process.Signal(syscall.SIGTERM); err != nil {
-		return fmt.Errorf("failed to stop task: %w", err)
+		fmt.Errorf("failed to stop task: %w", err)
+		return -1
 	}
 
-	return nil
+	return id
 }
 
-func (e *Executor) Kill(id int) error {
+func (e *Executor) Kill(id int) int {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
 	task, exists := e.tasks[id]
 	if !exists {
-		return fmt.Errorf("task %d not found", id)
+		fmt.Errorf("task %d not found", id)
+		return -1
 	}
 
 	if task.Status != StatusRunning {
-		return fmt.Errorf("task %d is not running", id)
+		fmt.Errorf("task %d is not running", id)
+		return -1
 	}
 
 	if err := task.Cmd.Process.Kill(); err != nil {
-		return fmt.Errorf("failed to kill task: %w", err)
+		fmt.Errorf("failed to kill task: %w", err)
+		return -1
 	}
 
-	return nil
+	return id
 }
 
-func (e *Executor) Restart(id int) error {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	task, exists := e.tasks[id]
+func (e *Executor) Restart(id int) int {
+	if e.Kill(id) == -1 {
+		return -1
+	}
+	if e.Start(id) == -1 {
+		return -1
+	}
 
-	
-
-	return nil
+	return id
 }
 
 func (e *Executor) ListTasks() []int {
@@ -246,74 +244,32 @@ func (e *Executor) ListTasks() []int {
 	return ids
 }
 
-func (e *Executor) InfoStatusTasks() []TaskInfo {
+func (e *Executor) InfoStatusTasks() []*TaskInfo {
 	taskIDs := e.ListTasks()
-	tasksInfo := make([]TaskInfo, 0, len(taskIDs))
+	tasksInfo := make([]*TaskInfo, 0, len(taskIDs))
 	
 	for _, taskID := range taskIDs {
-		info, exists := e.GetTaskInfo(taskID)
+		info := e.GetTaskInfo(taskID)
 		tasksInfo = append(tasksInfo, info)
 	}
 	return tasksInfo
 }
 
-func (e *Executor) GetTaskInfo(id int) (string, error) {
+func (e *Executor) GetTaskInfo(id int) *TaskInfo {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 
 	task, exists := e.tasks[id]
 	if !exists {
-		return "", fmt.Errorf("task %d not found", id)
+		fmt.Errorf("task %d not found", id)
+		return nil
 	}
 
-	cmdStr := strings.Join(task.Cmd.Args, " ")
-	taskInfo := TaskInfo{
+	taskInfo := &TaskInfo{
 		TaskID: task.ID,
 		Name:   task.Name,
 		Status: task.Status,
-		Cmd:    cmdStr,
+		TimeRunning: time.Since(task.StartTime).String(),
 	}
-
-	jsonBytes, err := json.Marshal(taskInfo)
-	if err != nil {
-		return "", err
-	}
-	return string(jsonBytes), nil
-}
-
-func (e *Executor) GetTaskDetail(id int) (string, error) {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-
-	task, exists := e.tasks[id]
-	if !exists {
-		return "", fmt.Errorf("task %d not found", id)
-	}
-
-	cmdStr := strings.Join(task.Cmd.Args, " ")
-	startTimeStr := ""
-	if !task.StartTime.IsZero() {
-		startTimeStr = task.StartTime.Format(time.RFC3339)
-	}
-
-	taskDetail := TaskDetail{
-		ID:                task.ID,
-		Name:              task.Name,
-		Cmd:               cmdStr,
-		Status:            task.Status,
-		ExitCode:          task.ExitCode,
-		RestartCount:      task.RestartCount,
-		MaxRestarts:       task.MaxRestarts,
-		StartTime:         startTimeStr,
-		Env:               task.Env,
-		WorkingDir:        task.WorkingDir,
-		ExpectedExitCodes: task.ExpectedExitCodes,
-		Umask:             task.Umask,
-	}
-
-	jsonBytes, err := json.Marshal(taskDetail)
-	if err != nil {
-		return "", err
-	}
-	return string(jsonBytes), nil
+	return taskInfo
 }
