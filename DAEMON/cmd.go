@@ -26,6 +26,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 	switch c.base {
 	case "load":
 		tmp := get_config_from_file_name(c.flags[0])
+		PrintFile_ConfigStruct(*tmp) //temporary
 		execConfig := convertToExecutorConfig(*tmp)
 		msg.add_payload("cmd", "load")
 		msg.add_payload("flags", c.flags[0])
@@ -34,10 +35,11 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 	case "reload":
 		// Relauch a profile (stop it, reread the config file, launch it again)
 		tmp := get_config_from_file_name(c.flags[0])
-		PrintFile_ConfigStruct(*tmp)
+		PrintFile_ConfigStruct(*tmp) //temporary
+		execConfig := convertToExecutorConfig(*tmp)
 		msg.add_payload("cmd", "reload")
 		msg.add_payload("flags", c.flags[0])
-		msg.add_payload("id", manager.ReloadProfile(*tmp, c.flags[0]))
+		msg.add_payload("id", manager.ReloadProfile(execConfig, c.flags[0]))
 		msg.add_payload("task", task)
 	case "stop":
 		msg.add_payload("id", manager.Stop(c.profile_id, c.flags[0])) // profileID and taskID)
