@@ -20,7 +20,11 @@ func recive_load(json *map[string]interface{}, rl *readline.Instance) {
 	if (!ok) {
 		id = -1
 	}
-	rl.Write([]byte("Loaded " + flag + "with id:" + strconv.Itoa(id) + "\n"))
+	if (id != -1) {
+		rl.Write([]byte("Loaded " + flag + "with id:" + strconv.Itoa(id) + "\n"))
+	} else {
+		rl.Write([]byte("Profile couldn't be loaded\n"))
+	}
 }
 
 func recive_reload(json *map[string]interface{}, rl *readline.Instance) {
@@ -36,8 +40,12 @@ func recive_reload(json *map[string]interface{}, rl *readline.Instance) {
 	if (!ok) {
 		id = -1
 	}
-	rl.Write([]byte("Stopped" + flag + "with id:" + strconv.Itoa(id) + "\n"))
-	rl.Write([]byte("Loaded" + flag + "with id:" + strconv.Itoa(id) + "\n"))
+	if (id != -1) {
+		rl.Write([]byte("Stopped" + flag + "with id:" + strconv.Itoa(id) + "\n"))
+		rl.Write([]byte("Loaded" + flag + "with id:" + strconv.Itoa(id) + "\n"))
+	} else {
+		rl.Write([]byte("Profile couldn't be reloaded\n"))
+	}
 }
 
 func recive_stop(json *map[string]interface{}, rl *readline.Instance) {
@@ -48,7 +56,11 @@ func recive_stop(json *map[string]interface{}, rl *readline.Instance) {
 	if (!ok) {
 		id = -1
 	}
-	rl.Write([]byte("Stopped process with id:" + strconv.Itoa(id) + "\n"))
+	if (id != -1) {
+		rl.Write([]byte("Stopped process with id:" + strconv.Itoa(id) + "\n"))
+	} else {
+		rl.Write([]byte("Process dosen't exist\n"))
+	}
 }
 
 func recive_start(json *map[string]interface{}, rl *readline.Instance) {
@@ -59,7 +71,11 @@ func recive_start(json *map[string]interface{}, rl *readline.Instance) {
 	if (!ok) {
 		id = -1
 	}
-	rl.Write([]byte("Started process with process id: " + strconv.Itoa(id) + "\n"));
+	if (id != -1) {
+		rl.Write([]byte("Started process with process id: " + strconv.Itoa(id) + "\n"));
+	} else {
+		rl.Write([]byte("Process dosen't exist\n"))
+	}
 }
 
 func recive_restart(json *map[string]interface{}, rl *readline.Instance) {
@@ -70,8 +86,12 @@ func recive_restart(json *map[string]interface{}, rl *readline.Instance) {
 	if (!ok) {
 		id = -1
 	}
-	rl.Write([]byte("Stopped process with process id: " + strconv.Itoa(id) + "\n"));
-	rl.Write([]byte("Started process with process id: " + strconv.Itoa(id) + "\n"));
+	if (id != -1) {
+		rl.Write([]byte("Stopped process with process id: " + strconv.Itoa(id) + "\n"));
+		rl.Write([]byte("Started process with process id: " + strconv.Itoa(id) + "\n"));
+	} else {
+		rl.Write([]byte("Process dosen't exist\n"))
+	}
 }
 
 func recive_describe(json *map[string]interface{}, rl *readline.Instance) {
@@ -204,21 +224,31 @@ func recive_kill(json *map[string]interface{}, rl *readline.Instance) {
 	if (!ok) {
 		id = -1
 	}
-	rl.Write([]byte("Killed process with id: " + strconv.Itoa(id) + "\n"));
+	if (id != -1) {
+		rl.Write([]byte("Killed process with id: " + strconv.Itoa(id) + "\n"))
+	} else {
+		rl.Write([]byte("Process dosen't exists\n"))
+	}
 }
 
-func recive_ch(json *map[string]interface{}, rl *readline.Instance) {
+func recive_ch(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
 	var ok		bool
 	var id		int
 
 	id, ok = (*json)["id"].(int)
 	if (!ok) {
 		id = -1
+	} else {
+		*profile_id = id
 	}
-	rl.Write([]byte("Switched to id: " + strconv.Itoa(id) + "\n"));
+	if (id != -1) {
+		rl.Write([]byte("Switched to id: " + strconv.Itoa(id) + "\n"));
+	} else {
+		rl.Write([]byte("Profile dosen't exists\n"))
+	}
 }
 
-func reciver(json *map[string]interface{}, rl *readline.Instance) {
+func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
 	var ok		bool
 	var cmd		string
 
@@ -249,6 +279,6 @@ func reciver(json *map[string]interface{}, rl *readline.Instance) {
 	case "kill":
 		recive_kill(json, rl)
 	case "ch":
-		recive_ch(json, rl)
+		recive_ch(json, rl, profile_id)
 	}
 }

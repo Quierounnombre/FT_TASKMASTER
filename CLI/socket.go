@@ -42,7 +42,7 @@ func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int) {
 			fmt.Println("ERROR_RECIVING_DATA")
 			break
 		}
-		reciver(&msg, rl)
+		reciver(&msg, rl, profile_id)
 		rl.Refresh()
 	}
 }
