@@ -26,43 +26,45 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 	switch c.base {
 	case "load":
 		tmp := get_config_from_file_name(c.flags[0])
+		PrintFile_ConfigStruct(*tmp) //temporary
 		execConfig := convertToExecutorConfig(*tmp)
-		tmp_id := manager.AddProfile(execConfig)
 		msg.add_payload("cmd", "load")
 		msg.add_payload("flags", c.flags[0])
-		msg.add_payload("id", tmp_id)
+		msg.add_payload("id", manager.AddProfile(execConfig))
 		msg.add_payload("task", task)
 	case "reload":
-		for index, element := range config {
-			config[index] = *get_config_from_file_name(element.Path)
-		}
-		return ("Configurations reloaded")
+		// Relauch a profile (stop it, reread the config file, launch it again)
+		tmp := get_config_from_file_name(c.flags[0])
+		PrintFile_ConfigStruct(*tmp) //temporary
+		execConfig := convertToExecutorConfig(*tmp)
+		msg.add_payload("cmd", "reload")
+		msg.add_payload("flags", c.flags[0])
+		msg.add_payload("id", manager.ReloadProfile(execConfig, c.flags[0]))
+		msg.add_payload("task", task)
 	case "stop":
-		//CHECK FOR AVAILABLE PROCESS HERE?
-		// We would do manager.Stop(profileID, taskID) but this is TMP
-		return (string("Stoped " + c.flags[0]))
+		msg.add_payload("id", manager.Stop(c.profile_id, c.flags[0])) // profileID and taskID)
 	case "start":
-		//CHECK FOR AVAILABLE PROCESS HERE?
-		// We would do manager.Start(profileID, taskID) but this is TMP
-		return (string("Started " + c.flags[0]))
+		msg.add_payload("id", manager.Start(c.profile_id, c.flags[0])) // profileID and taskID
 	case "restart":
-		if len(c.flags) > 0 {
-			return (string("Restarted " + c.flags[0]))
-		}
-		return (string("Restarting all programs"))
+		msg.add_payload("id", manager.Restart(c.profile_id, c.flags[0])) // profileID and taskID
+	case "kill":
+		msg.add_payload("id", manager.Kill(c.profile_id, c.flags[0])) // profileID and taskID
 	case "describe":
-		result, _ := manager.DescribeTask(0, 0)
-		return result
+		msg.add_payload("task", manager.DescribeTask(c.profile_id, c.flags[0])) // profileID and taskID
 	case "ps":
 		// List profiles
-		return (manager.ListProfiles())
+		msg.add_payload("profiles", manager.ListProfiles())
 	case "ls":
-		result, _ := manager.InfoStatusTasks(0)
-		return result
+		// List all tasks of a profile
+		msg.add_payload("procs", manager.InfoStatusTasks(c.profile_id))
+	case "ch":
+		// Change current profile
+		msg.add_payload("id", manager.CheckProfileExists(c.flags[0])) // profileID
 	case "help":
 		return (cmd_help())
+	default:
+		msg.add_payload("error", "Unknown command: "+c.base)
 	}
-	return ("Wrong cmd")
 }
 
 func (c *Cmd) empty_cmd() {

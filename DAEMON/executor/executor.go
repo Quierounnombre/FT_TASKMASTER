@@ -152,6 +152,39 @@ func (e *Executor) GetStatus(id int) (Status, error) {
 	return task.Status, nil
 }
 
+func (e *Executor) GetTaskDetail(id int) *TaskDetail {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	task, exists := e.tasks[id]
+	if !exists {
+		fmt.Errorf("task %d not found", taskID)
+		return nil
+	}
+
+	startTimeStr := ""
+	if !task.StartTime.IsZero() {
+		startTimeStr = task.StartTime.Format("2006-01-02T15:04:05Z07:00")
+	}
+	
+	taskDetail := &TaskDetail{
+		ID:                task.ID,
+		Name:              task.Name,
+		Cmd:               task.Cmd.String(),
+		Status:            task.Status,
+		ExitCode:          task.ExitCode,
+		RestartCount:      task.RestartCount,
+		MaxRestarts:       task.MaxRestarts,
+		StartTime:         startTimeStr,
+		Env:               task.Env,
+		WorkingDir:        task.WorkingDir,
+		ExpectedExitCodes: task.ExpectedExitCodes,
+		Umask:             task.Umask,
+		RestartPolicy:	   task.restartPolicy,
+	}
+	return taskDetail
+}
+
 func (e *Executor) Stop(id int) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -192,6 +225,16 @@ func (e *Executor) Kill(id int) error {
 	return nil
 }
 
+func (e *Executor) Restart(id int) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	task, exists := e.tasks[id]
+
+	
+
+	return nil
+}
+
 func (e *Executor) ListTasks() []int {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
@@ -201,6 +244,17 @@ func (e *Executor) ListTasks() []int {
 		ids = append(ids, id)
 	}
 	return ids
+}
+
+func (e *Executor) InfoStatusTasks() []TaskInfo {
+	taskIDs := e.ListTasks()
+	tasksInfo := make([]TaskInfo, 0, len(taskIDs))
+	
+	for _, taskID := range taskIDs {
+		info, exists := e.GetTaskInfo(taskID)
+		tasksInfo = append(tasksInfo, info)
+	}
+	return tasksInfo
 }
 
 func (e *Executor) GetTaskInfo(id int) (string, error) {

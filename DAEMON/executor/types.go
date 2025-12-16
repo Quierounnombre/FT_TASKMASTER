@@ -63,28 +63,6 @@ type Task struct {
 	launchWait        time.Duration
 }
 
-type TaskInfo struct {
-	TaskID int    `json:"taskID"`
-	Name   string `json:"name"`
-	Status Status `json:"status"`
-	Cmd    string `json:"cmd"`
-}
-
-type TaskDetail struct {
-	ID                int      `json:"id"`
-	Name              string   `json:"name"`
-	Cmd               string   `json:"cmd"`
-	Status            Status   `json:"status"`
-	ExitCode          int      `json:"exitCode"`
-	RestartCount      int      `json:"restartCount"`
-	MaxRestarts       int      `json:"maxRestarts"`
-	StartTime         string   `json:"startTime"`
-	Env               []string `json:"env"`
-	WorkingDir        string   `json:"workingDir"`
-	ExpectedExitCodes []int    `json:"expectedExitCodes"`
-	Umask             int      `json:"umask"`
-}
-
 // Executor type
 type Executor struct {
 	mu    sync.RWMutex
@@ -105,3 +83,33 @@ type Manager struct {
 	nextID      int
 	watcher     *Watcher
 }
+
+// Return types
+type ListProfiles struct {
+	ProfileID int    `json:"profileID"`
+	FilePath  string `json:"filePath"`
+}
+
+type TaskInfo struct {
+	TaskID 		int    `json:"taskID"`
+	Name   		string `json:"name"`
+	Status 		Status `json:"status"`
+	TimeRunning string `json:"timeRunning"`
+}
+
+type TaskDetail struct {
+	ID                int      `json:"id"`
+	Name              string   `json:"name"`
+	Cmd               string   `json:"cmd"`
+	Status            Status   `json:"status"`
+	ExitCode          int      `json:"exitCode"`
+	RestartCount      int      `json:"restartCount"`
+	MaxRestarts       int      `json:"maxRestarts"`
+	StartTime         string   `json:"startTime"`
+	Env               []string `json:"env"`
+	WorkingDir        string   `json:"workingDir"`
+	ExpectedExitCodes []int    `json:"expectedExitCodes"`
+	Umask             int      `json:"umask"`
+	RestartPolicy	  string   `json:"restartPolicy"`
+}
+
