@@ -43,15 +43,11 @@ func main() {
 	var sk		net.Conn
 	var encoder	*json.Encoder
 	var path	string
-	var cmd		Cmd
 	
 	path  = get_yaml_path()
 	check_file_existance(path)
 	sk = open_socket(socket_path)
 	defer sk.Close()
 	encoder = json.NewEncoder(sk)
-	cmd.Cmd = "load"
-	cmd.Flags = append(cmd.Flags, path)
-	send_data(encoder, &cmd)
 	console_start(sk, encoder)
 }
