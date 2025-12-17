@@ -59,7 +59,7 @@ func (m *Msg) get_profile_id() int {
 
 	profile_id, ok = m.content["profile_id"].(int)
 	if (ok) {
-		return (value)
+		return (profile_id)
 	}
 	return (-1)
 }

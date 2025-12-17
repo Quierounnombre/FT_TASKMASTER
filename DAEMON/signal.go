@@ -19,13 +19,14 @@ func set_channel_for_signals() chan os.Signal {
 	return (channel)
 }
 
+//SHOULD WE DO A RELOAD OF EVERY PROFILE?
 func handle_signals(sig os.Signal, config []File_Config, manager *executor.Manager) {
 	switch sig {
 	case syscall.SIGHUP:
 		var cmd Cmd
 
 		cmd.base = "reload"
-		cmd.Execute(config, manager)
+		//cmd.Execute(config, manager)
 	default:
 		os.Exit(1)
 	}
