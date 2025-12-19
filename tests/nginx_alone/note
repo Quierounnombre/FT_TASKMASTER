@@ -1,0 +1,3 @@
+this test checks:
+	-To launch complex services and infrastructure
+	-To launch multiple process(workers(WIP) + daemon)

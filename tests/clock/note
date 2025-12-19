@@ -1,0 +1,5 @@
+this test check:
+	- if a task can read the env
+	- if a task can modify its env
+	- how a task can run indefinitly(set LIMIT to a huge number)
+	- how a task can fail(not set LIMIT)

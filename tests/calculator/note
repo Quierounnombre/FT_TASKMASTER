@@ -1,0 +1,3 @@
+This test checks:
+	- if stdout redirection works
+	- how a task ends

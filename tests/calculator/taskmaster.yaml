@@ -1,0 +1,6 @@
+process:
+  - name: calculator
+    cmd: ./calculator.sh
+    restart: on_error
+    start_at_launch: true
+    stdout: calculator_result

@@ -1,0 +1,7 @@
+process:
+  - name: clock
+    cmd: ./clock.sh
+    restart: on_error
+    start_at_launch: true
+    env:
+      LIMIT: "10"
