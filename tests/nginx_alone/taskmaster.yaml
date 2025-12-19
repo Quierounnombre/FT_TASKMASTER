@@ -1,0 +1,5 @@
+process:
+  - name: nginx-alone
+    cmd: nginx -g "daemon off;"
+    restart: on_error
+    start_at_launch: true

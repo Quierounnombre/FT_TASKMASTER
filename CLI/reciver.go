@@ -281,5 +281,7 @@ func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *in
 		recive_kill(json, rl)
 	case "ch":
 		recive_ch(json, rl, profile_id)
+	default:
+		rl.Write([]byte("DEFAULT"))
 	}
 }

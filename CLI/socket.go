@@ -44,6 +44,9 @@ func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int) {
 		}
 		reciver(&msg, rl, profile_id)
 		rl.Refresh()
+		if (len(os.Args) > start_shell) {
+			os.Exit(0)
+		}
 	}
 }
 

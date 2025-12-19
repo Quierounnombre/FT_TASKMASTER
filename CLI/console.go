@@ -9,6 +9,7 @@ import (
 )
 
 const history_path = "/run/.history"
+const start_shell = 1
 
 //Sets the configuration for the console
 func	set_config() *readline.Config {
@@ -16,6 +17,9 @@ func	set_config() *readline.Config {
 
 	config_rl.HistoryFile = history_path
 	config_rl.Prompt = "<>< "
+	if (len(os.Args) > start_shell) {
+		config_rl.Prompt = ""
+	}
 	config_rl.HistoryLimit = 100
 	return (&config_rl)
 }
@@ -42,6 +46,11 @@ func	console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 	var line	string
 	var cmd		Cmd
 	
+	if (len(os.Args) > start_shell) {
+		cmd.Cmd = os.Args[1]
+		cmd.profile_id = 0
+		send_data(encoder, &cmd)
+	}
 	for (true) {
 		line, err = rl.Readline()
 		if (err != nil) {

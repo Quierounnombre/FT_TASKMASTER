@@ -14,7 +14,7 @@ func set_channel_for_signals() chan os.Signal {
 	var channel chan os.Signal
 
 	channel = make(chan os.Signal, 1)
-	signal.Notify(channel, syscall.SIGINT)
+	signal.Notify(channel, syscall.SIGHUP)
 	//ADD more sigint
 	return (channel)
 }
