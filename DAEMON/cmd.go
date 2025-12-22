@@ -1,16 +1,16 @@
 package main
 
 import (
-	"taskmaster-daemon/executor"
 	"fmt"
 	"strconv"
+	"taskmaster-daemon/executor"
 )
 
 type Cmd struct {
-	base		string
-	flags		[]string
-	profile_id	int
-	err			bool
+	base       string
+	flags      []string
+	profile_id int
+	err        bool
 }
 
 // Parses the cmd and do all the data cleanup
@@ -22,55 +22,126 @@ func (c *Cmd) Parse_cmd(msg *Msg) {
 	msg.clean_content()
 }
 
-// EXECUTE COMANDS
+// Error sender
+func (c *Cmd) send_error(msg *Msg, errorStr string) {
+	msg.add_payload("cmd", "error")
+	msg.add_payload("flags", errorStr)
+}
+
+// Execute commands
 func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg) {
 	switch c.base {
 	case "load":
 		tmp := get_config_from_file_name(c.flags[0])
 		PrintFile_ConfigStruct(*tmp) //temporary
 		execConfig := convertToExecutorConfig(*tmp)
+
+		newProfileID := manager.AddProfile(execConfig)
+		tasks, err := manager.InfoStatusTasks(newProfileID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
 		msg.add_payload("cmd", "load")
 		msg.add_payload("flags", c.flags[0])
-		newProfileID := manager.AddProfile(execConfig)
 		msg.add_payload("id", newProfileID)
-		msg.add_payload("task", manager.InfoStatusTasks(newProfileID))
+		msg.add_payload("task", tasks)
+
 	case "reload":
 		// Relauch a profile (stop it, reread the config file, launch it again)
 		tmp := get_config_from_file_name(c.flags[0])
 		PrintFile_ConfigStruct(*tmp) //temporary
 		execConfig := convertToExecutorConfig(*tmp)
 		profileID, _ := strconv.Atoi(c.flags[0])
+		newProfileID, err := manager.ReloadProfile(execConfig, profileID)
+		tasks, err := manager.InfoStatusTasks(newProfileID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
 		msg.add_payload("cmd", "reload")
 		msg.add_payload("flags", c.flags[0])
-		msg.add_payload("id", manager.ReloadProfile(execConfig, profileID))
-		msg.add_payload("task", manager.InfoStatusTasks(profileID))
+		msg.add_payload("id", newProfileID)
+		msg.add_payload("task", tasks)
+
 	case "stop":
 		taskID, _ := strconv.Atoi(c.flags[0])
-		msg.add_payload("id", manager.Stop(c.profile_id, taskID)) // profileID and taskID)
+		newProfileID, err := manager.Stop(c.profile_id, taskID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
+		msg.add_payload("id", newProfileID)
+
 	case "start":
 		taskID, _ := strconv.Atoi(c.flags[0])
-		msg.add_payload("id", manager.Start(c.profile_id, taskID)) // profileID and taskID
+		newProfileID, err := manager.Start(c.profile_id, taskID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
+		msg.add_payload("id", newProfileID)
 	case "restart":
 		taskID, _ := strconv.Atoi(c.flags[0])
-		msg.add_payload("id", manager.Restart(c.profile_id, taskID)) // profileID and taskID
+		newProfileID, err := manager.Restart(c.profile_id, taskID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
+		msg.add_payload("id", newProfileID)
+
 	case "kill":
 		taskID, _ := strconv.Atoi(c.flags[0])
-		msg.add_payload("id", manager.Kill(c.profile_id, taskID)) // profileID and taskID
+		newProfileID, err := manager.Kill(c.profile_id, taskID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
+		msg.add_payload("id", newProfileID)
+
 	case "describe":
 		taskID, _ := strconv.Atoi(c.flags[0])
-		msg.add_payload("task", manager.DescribeTask(c.profile_id, taskID)) // profileID and taskID
+		taskDetail, err := manager.DescribeTask(c.profile_id, taskID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
+		msg.add_payload("task", taskDetail)
+
 	case "ps":
 		// List profiles
 		msg.add_payload("profiles", manager.ListProfiles())
+
 	case "ls":
 		// List all tasks of a profile
-		msg.add_payload("procs", manager.InfoStatusTasks(c.profile_id))
+		tasks, err := manager.InfoStatusTasks(c.profile_id)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
+		msg.add_payload("procs", tasks)
+
 	case "ch":
 		// Change current profile
 		profileID, _ := strconv.Atoi(c.flags[0])
-		msg.add_payload("id", manager.CheckProfileExists(profileID)) // profileID
+		exists, err := manager.CheckProfileExists(profileID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
+		msg.add_payload("id", exists)
+
 	default:
-		msg.add_payload("error", "Unknown command: "+c.base)
+		c.send_error(msg, "Da hell is that? "+c.base)
 	}
 }
 

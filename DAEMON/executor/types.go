@@ -35,12 +35,12 @@ type File_Config struct {
 type Status string
 
 const (
-	StatusPending   Status = "pending"
-	StatusKilled    Status = "killed"
-	StatusRunning   Status = "running"
-	StatusStopped   Status = "stopped"
-	StatusFailed    Status = "failed"
-	StatusSuccess   Status = "success"
+	StatusPending     Status = "pending"
+	StatusKilled      Status = "killed"
+	StatusRunning     Status = "running"
+	StatusStopped     Status = "stopped"
+	StatusFailed      Status = "failed"
+	StatusSuccess     Status = "success"
 	StatusTerminating Status = "terminating"
 )
 
@@ -82,6 +82,7 @@ type Manager struct {
 	nextProfile int
 	nextID      int
 	watcher     *Watcher
+	logger      *Logger
 }
 
 // Return types
@@ -91,9 +92,9 @@ type ListProfiles struct {
 }
 
 type TaskInfo struct {
-	TaskID 		int    `json:"taskID"`
-	Name   		string `json:"name"`
-	Status 		Status `json:"status"`
+	TaskID      int    `json:"taskID"`
+	Name        string `json:"name"`
+	Status      Status `json:"status"`
 	TimeRunning string `json:"timeRunning"`
 }
 
@@ -110,6 +111,5 @@ type TaskDetail struct {
 	WorkingDir        string   `json:"workingDir"`
 	ExpectedExitCodes []int    `json:"expectedExitCodes"`
 	Umask             int      `json:"umask"`
-	RestartPolicy	  string   `json:"restartPolicy"`
+	RestartPolicy     string   `json:"restartPolicy"`
 }
-

@@ -29,7 +29,6 @@ Settear wrapper the cmds
 TODO:
 - logs!
 - give back errors
-- refactor code (there are repeated shit)
 
 Executor:
 
