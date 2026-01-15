@@ -15,6 +15,23 @@ Taskmaster is going to work with a client & server way. There are two directorie
 
 ### CLI structure
 
+IMPORTANT: DAEMON MUST BE RUNNING
+
+How to use:
+
+Open terminal:
+Execute the cmd(./CLI) without any arguments this will open a terminal for you to work
+with our cmds.
+
+CLI:
+Execute the cmd(./CLI) with arguments, this will send the cmd, and wait for the response, then return control
+to the user.
+
+Internals:
+- `socket.go` General networking.
+- `reciver.go` Boilerplate for output from daemon.
+- `console.go` Actual logic for the CLI, either send a single cmd or remains open with rl.
+
 ### Daemon structure
 
 The main configuration of a server is done at the root of the directory:
