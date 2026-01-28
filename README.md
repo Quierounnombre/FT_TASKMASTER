@@ -1,13 +1,14 @@
 ## How to develop
 
 Start up the environment:
-'''
+```
 docker compose up -d
-'''
+```
+
 Then access the container:
-'''
+```
 docker compose exec taskmaster-dev bash
-'''
+```
 
 ## Structure of the project
 
