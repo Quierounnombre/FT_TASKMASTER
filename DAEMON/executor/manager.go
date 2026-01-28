@@ -6,10 +6,15 @@ import (
 )
 
 func NewManager() *Manager {
+	logger, err := New("/tmp/taskmaster.log") //<--- Thi shi temporary
+	if err != nil {
+		panic("Failed to initialize logger file: " + err.Error())
+	}
 	m := &Manager{
 		profiles:    make(map[int]*Profile),
 		nextProfile: 1,
 		nextID:      1,
+		logger:      logger,
 	}
 	m.watcher = NewWatcher(m)
 	m.watcher.Start()
