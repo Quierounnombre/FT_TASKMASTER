@@ -1,81 +1,86 @@
 package main
 
 import (
+	"encoding/json"
+	"net"
 	"os"
 	"strconv"
-	"net"
+	"strings"
+
 	"github.com/chzyer/readline"
-	"encoding/json"
 )
 
 const history_path = "/run/.history"
 const start_shell = 1
 
-//Sets the configuration for the console
-func	set_config() *readline.Config {
+// Sets the configuration for the console
+func set_config() *readline.Config {
 	var config_rl readline.Config
 
 	config_rl.HistoryFile = history_path
 	config_rl.Prompt = "<>< "
-	if (len(os.Args) > start_shell) {
+	if len(os.Args) > start_shell {
 		config_rl.Prompt = ""
 	}
 	config_rl.HistoryLimit = 100
 	return (&config_rl)
 }
 
-//Sets up rl library and starts the console
-func	console_start(sk net.Conn, encoder *json.Encoder) {
-	var rl			*readline.Instance
-	var config_rl	*readline.Config
-	var err			error
-	var profile_id	int
+// Sets up rl library and starts the console
+func console_start(sk net.Conn, encoder *json.Encoder) {
+	var rl *readline.Instance
+	var config_rl *readline.Config
+	var err error
+	var profile_id int
 
 	config_rl = set_config()
 	rl, err = readline.NewEx(config_rl)
-	if (err != nil) {
+	if err != nil {
 		os.Exit(1)
 	}
 	go recive_data(sk, rl, &profile_id)
 	console(rl, encoder, &profile_id)
 }
 
-//Starts the console
-func	console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
-	var err		error
-	var line	string
-	var cmd		Cmd
-	
-	if (len(os.Args) > start_shell) {
+// Starts the console
+func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
+	var err error
+	var line string
+	var flags []string
+	var cmd Cmd
+
+	if len(os.Args) > start_shell {
 		cmd.Cmd = os.Args[1]
 		cmd.profile_id = 0
 		send_data(encoder, &cmd)
 	}
-	for (true) {
+	for true {
 		line, err = rl.Readline()
-		if (err != nil) {
+		if err != nil {
 			os.Exit(1)
 		}
-		if (!local_cmds(profile_id, line, rl)) {
-			cmd.Cmd = line
+		if !local_cmds(profile_id, line, rl) {
+			flags = strings.Split(line, " ")
+			cmd.Cmd = flags[0]
+			cmd.Flags = flags[1:]
 			cmd.profile_id = *profile_id
 			send_data(encoder, &cmd)
 		}
 	}
 }
 
-//Check for cmds that dosen't need daemon
-//Returns true if found a cmd that dosen't need daemon, false otherwise
-func	local_cmds(profile_id *int, line string, rl *readline.Instance) bool {
-	if (line == "help") {
+// Check for cmds that dosen't need daemon
+// Returns true if found a cmd that dosen't need daemon, false otherwise
+func local_cmds(profile_id *int, line string, rl *readline.Instance) bool {
+	if line == "help" {
 		rl.Write([]byte(cmd_help()))
 		return (true)
 	}
-	if (line == "wichid") {
+	if line == "wichid" {
 		rl.Write([]byte("Current ID: " + strconv.Itoa(*profile_id) + "\n"))
 		return (true)
 	}
-	return(false)
+	return (false)
 }
 
 const bold = "\033[1m"

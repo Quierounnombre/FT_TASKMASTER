@@ -1,8 +1,8 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"taskmaster-daemon/executor"
 )
 
@@ -21,7 +21,7 @@ func main() {
 
 func PrintMap(m map[string]interface{}) {
 	for k, v := range m {
-		fmt.Printf("%s: %v\n", k, v)
+		fmt.Printf("%s: [%v]\n", k, v)
 	}
 }
 

@@ -54,6 +54,7 @@ func (m *Manager) AddProfile(config File_Config) int {
 		executor:       executor,
 		configFilePath: config.Path,
 	}
+	fmt.Println("Profile added with ID: " + strconv.Itoa(profileID))
 	return profileID
 }
 
@@ -112,7 +113,7 @@ func (m *Manager) ReloadProfile(config File_Config, profileID int) (int, error) 
 }
 
 func (m *Manager) ListProfiles() []ListProfiles {
-	m.logger.Info("Listing profiles")
+	m.logger.Info("Request: List profiles")
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 

@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/goccy/go-yaml"
 	"os"
 	"time"
+
+	"github.com/goccy/go-yaml"
 )
 
 /*
@@ -90,7 +91,7 @@ func check_file_existance(path string) bool {
 
 	_, err = os.Stat(path)
 	if err != nil {
-		fmt.Println("Check for file existance in:", path)
+		fmt.Println("Check for file existance in:", err)
 		return (false)
 	}
 	return (true)
