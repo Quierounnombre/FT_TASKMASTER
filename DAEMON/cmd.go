@@ -173,7 +173,12 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 
 	case "ps":
 		// List profiles
-		msg.add_payload("profiles", manager.ListProfiles())
+		profiles := manager.ListProfiles()
+		if profiles == nil {
+			c.send_error(msg, "No profiles found")
+			return
+		}
+		msg.add_payload("profiles", profiles)
 
 	case "ls":
 		if c.profile_id == 0 {
