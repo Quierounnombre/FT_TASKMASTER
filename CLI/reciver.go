@@ -153,19 +153,32 @@ func recive_ps(json *map[string]interface{}, rl *readline.Instance) {
 	var ok bool
 	var path string
 	var key string
+	var keyFloat float64
 	var prcs map[string]interface{}
+	var proc_lst []interface{}
+	var obj interface{}
 
-	prcs, ok = (*json)["prcs"].(map[string]interface{})
-	if !ok {
-		prcs = nil
-	}
 	rl.Write([]byte("+------+------------------------------+\n"))
 	rl.Write([]byte("| ID   | path                         |\n"))
 	rl.Write([]byte("+------+------------------------------+\n"))
-	for key, _ = range prcs {
-		path, ok = prcs["path"].(string)
+	proc_lst, ok = (*json)["profiles"].([]interface{})
+	if !ok {
+		proc_lst = nil
+	}
+	for _, obj = range proc_lst {
+		prcs, ok = obj.(map[string]interface{})
 		if !ok {
-			path = "ERROR MISSING CONTENT"
+			prcs = nil
+		}
+		keyFloat, ok = prcs["profileID"].(float64)
+		if ok {
+			key = strconv.Itoa(int(keyFloat))
+		} else {
+			key = "-1"
+		}
+		path, ok = prcs["filePath"].(string)
+		if !ok {
+			path = "ERROR NO PATH"
 		}
 		rl.Write([]byte(
 			fmt.Sprintf("| %-4s | %-28s |\n", key, path),
@@ -245,6 +258,7 @@ func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *in
 
 	cmd, ok = (*json)["cmd"].(string)
 	fmt.Println("CMD: ", cmd)
+	fmt.Println("JSON: ", json)
 	if !ok {
 		rl.Write([]byte("ERROR CMD NOT FOUND"))
 		return

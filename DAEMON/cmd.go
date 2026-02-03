@@ -178,6 +178,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			c.send_error(msg, "No profiles found")
 			return
 		}
+		msg.add_payload("cmd", "ps")
 		msg.add_payload("profiles", profiles)
 
 	case "ls":

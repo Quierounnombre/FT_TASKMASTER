@@ -20,7 +20,7 @@ func (m *Msg) reply() {
 	var err error
 
 	err = m.encoder.Encode(m.content)
-	fmt.Println("RESPOESTATE JSON: ", m.content)
+	fmt.Println("RESP ESTATE JSON: ", m.content)
 	if err != nil {
 		fmt.Println("Error socket not working")
 		fmt.Println(err)

@@ -117,13 +117,18 @@ func (m *Manager) ListProfiles() []ListProfiles {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
+	if len(m.profiles) == 0 {
+		return nil
+	}
 	profileIDs := make([]ListProfiles, 0, len(m.profiles))
 	for _, profile := range m.profiles {
 		profileIDs = append(profileIDs, ListProfiles{
 			ProfileID: profile.ID,
-			FilePath:  profile.configFilePath,
+			//FilePath:  profile.configFilePath,
+			FilePath: "pepe gotera y otilio",
 		})
 	}
+	fmt.Println("Profile IDs: ", profileIDs)
 	return profileIDs
 }
 

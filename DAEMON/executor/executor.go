@@ -49,8 +49,12 @@ func (e *Executor) initTask(process Process, nextID *int) {
 		}
 
 		// Cmd configuration
-		cmd := exec.Command(process.Cmd, envSlice...)
+		cmd := exec.Command(process.Cmd)
+		// Set environment variables
+		cmd.Env = envSlice
 		// Stdout and Stderr redirection
+		fmt.Println("process.Stdout: ", process.Stdout)
+
 		if process.Stdout != nil {
 			cmd.Stdout = process.Stdout
 		} else {
@@ -120,6 +124,14 @@ func (e *Executor) Start(id int) (int, error) {
 
 	e.mu.Lock()
 	defer e.mu.Unlock()
+
+	// Sync and close file handles if they are *os.File
+	if f, ok := task.StdoutWriter.(interface{ Sync() error }); ok {
+		f.Sync()
+	}
+	if f, ok := task.StderrWriter.(interface{ Sync() error }); ok {
+		f.Sync()
+	}
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
