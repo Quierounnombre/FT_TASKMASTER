@@ -97,6 +97,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			return
 		}
 
+		msg.add_payload("cmd", "stop")
 		msg.add_payload("id", newProfileID)
 
 	case "start":
@@ -115,6 +116,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			return
 		}
 
+		msg.add_payload("cmd", "stop")
 		msg.add_payload("id", newProfileID)
 
 	case "restart":
@@ -133,6 +135,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			return
 		}
 
+		msg.add_payload("cmd", "restart")
 		msg.add_payload("id", newProfileID)
 
 	case "kill":
@@ -151,6 +154,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			return
 		}
 
+		msg.add_payload("cmd", "kill")
 		msg.add_payload("id", newProfileID)
 
 	case "describe":
@@ -169,6 +173,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			return
 		}
 
+		msg.add_payload("cmd", "describe")
 		msg.add_payload("task", taskDetail)
 
 	case "ps":
@@ -193,6 +198,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			return
 		}
 
+		msg.add_payload("cmd", "ls")
 		msg.add_payload("procs", tasks)
 
 	case "ch":
@@ -208,6 +214,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			return
 		}
 
+		msg.add_payload("cmd", "ch")
 		msg.add_payload("id", exists)
 
 	default:
