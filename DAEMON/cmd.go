@@ -188,7 +188,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 
 	case "ls":
 		if c.profile_id == 0 {
-			c.send_error(msg, "Lack connection to profile")
+			c.send_error(msg, "Set a profile first dude")
 			return
 		}
 		// List all tasks of a profile
@@ -208,14 +208,15 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 		}
 		// Change current profile
 		profileID, _ := strconv.Atoi(c.flags[0])
-		exists, err := manager.CheckProfileExists(profileID)
+		fmt.Println("profileID =", profileID)
+		_, err := manager.CheckProfileExists(profileID)
 		if err != nil {
 			c.send_error(msg, err.Error())
 			return
 		}
 
 		msg.add_payload("cmd", "ch")
-		msg.add_payload("id", exists)
+		msg.add_payload("id", profileID)
 
 	default:
 		c.send_error(msg, "Da hell is that? "+c.base)

@@ -48,13 +48,12 @@ func (e *Executor) initTask(process Process, nextID *int) {
 			instanceName = fmt.Sprintf("%s_%d", process.Name, i)
 		}
 
-		// Cmd configuration
-		cmd := exec.Command(process.Cmd)
+		// Cmd configuration - run through shell to handle scripts and arguments
+		cmd := exec.Command("/bin/sh", "-c", process.Cmd)
 		// Set environment variables
 		cmd.Env = envSlice
-		// Stdout and Stderr redirection
-		fmt.Println("process.Stdout: ", process.Stdout)
 
+		// Stdout and Stderr redirection
 		if process.Stdout != nil {
 			cmd.Stdout = process.Stdout
 		} else {

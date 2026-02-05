@@ -1,6 +1,7 @@
 process:
   - name: calculator
-    cmd: ./calculator.sh
+    cmd: /app/tests/calculator/calculator.sh
     restart: on_error
     start_at_launch: true
-    stdout: calculator_result
+    stdout: /app/tests/calculator/calculator_result
+    work_dir: /app/tests/calculator

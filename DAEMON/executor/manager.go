@@ -2,14 +2,26 @@ package executor
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 )
 
 func NewManager() *Manager {
-	logger, err := New("/tmp/taskmaster.log") //<--- Thi shi temporary
+	// Get the executable's directory
+	exePath, err := os.Executable()
+	if err != nil {
+		panic("Failed to get executable path: " + err.Error())
+	}
+	exeDir := filepath.Dir(exePath)
+	logPath := filepath.Join(exeDir, "taskmaster.log")
+
+	// Initialize logger
+	logger, err := New(logPath)
 	if err != nil {
 		panic("Failed to initialize logger file: " + err.Error())
 	}
+
 	m := &Manager{
 		profiles:    make(map[int]*Profile),
 		nextProfile: 1,
