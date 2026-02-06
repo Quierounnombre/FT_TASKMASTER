@@ -60,6 +60,12 @@ func (w *Watcher) checkProfile(profile *Profile) {
 		if task.Status == StatusTerminating {
 			continue
 		}
+		if task.Status == StatusPending {
+			profile.executor.mu.Unlock() // Do we really need this?
+			w.manager.Start(profile.ID, id)
+			profile.executor.mu.Lock()
+			continue
+		}
 		if task.Status == StatusRunning && task.Cmd.Process != nil {
 			if err := task.Cmd.Process.Signal(syscall.Signal(0)); err != nil {
 				w.handleProcessDeath(task, profile.executor)
