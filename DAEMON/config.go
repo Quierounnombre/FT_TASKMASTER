@@ -109,6 +109,7 @@ func get_config_from_file_name(name string) *File_Config {
 		raw_yaml = get_file_content(name)
 		config = extract_file_content(raw_yaml)
 		set_config_defaults(config)
+		config.Path = name
 	}
 	return (config)
 }

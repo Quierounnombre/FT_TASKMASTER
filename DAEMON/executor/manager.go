@@ -136,8 +136,7 @@ func (m *Manager) ListProfiles() []ListProfiles {
 	for _, profile := range m.profiles {
 		profileIDs = append(profileIDs, ListProfiles{
 			ProfileID: profile.ID,
-			//FilePath:  profile.configFilePath,
-			FilePath: "pepe gotera y otilio",
+			FilePath:  profile.configFilePath,
 		})
 	}
 	fmt.Println("Profile IDs: ", profileIDs)
