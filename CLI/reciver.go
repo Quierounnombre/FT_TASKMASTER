@@ -13,9 +13,9 @@ func get_id(json *map[string]interface{}) int {
 	var ok bool
 	var idFloat float64
 
-	idFloat, ok = (*json)["id"].(float64) // Correct type assertion
+	idFloat, ok = (*json)["id"].(float64)
 	if ok {
-		id = int(idFloat) // Convert to int
+		id = int(idFloat)
 	} else {
 		id = -1
 	}
@@ -188,18 +188,19 @@ func recive_ps(json *map[string]interface{}, rl *readline.Instance) {
 }
 
 func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
-	var ok bool
-	var proc_lst []interface{}
-	var proc map[string]interface{}
-	var id int
-	var name string
-	var status string
-	var ts string
-	var obj interface{}
+	var ok				bool
+	var proc_lst		[]interface{}
+	var proc			map[string]interface{}
+	var id				int
+	var id_float		float64
+	var name			string
+	var status			string
+	var ts				string
+	var obj				interface{}
 
-	rl.Write([]byte("+----+------------+--------+-----------------------|\n"))
-	rl.Write([]byte("| ID | Name       | Status | Timestamp             |\n"))
-	rl.Write([]byte("+----+------------+--------+-----------------------|\n"))
+	rl.Write([]byte("+------+------------------+----------+-----------------------|\n"))
+	rl.Write([]byte("|  ID  | Name             |  Status  | Timestamp             |\n"))
+	rl.Write([]byte("+------+------------------+----------+-----------------------|\n"))
 	proc_lst, ok = (*json)["procs"].([]interface{})
 	if !ok {
 		proc_lst = nil
@@ -209,7 +210,11 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 		if !ok {
 			proc = nil
 		}
-		id = get_id(&proc)
+		id_float, ok = proc["taskID"].(float64)
+		id = int(id_float)
+		if !ok {
+			id = -1
+		}
 		name, ok = proc["name"].(string)
 		if !ok {
 			name = "Null"
@@ -222,9 +227,9 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 		if !ok {
 			ts = "Null"
 		}
-		rl.Write([]byte(fmt.Sprintf("| %-4s | %-12s | %-8s | %-24s |\n", strconv.Itoa(id), name, status, ts)))
+		rl.Write([]byte(fmt.Sprintf("| %-4s | %-16s | %-8s | %-21s |\n", strconv.Itoa(id), name, status, ts)))
 	}
-	rl.Write([]byte("+----+------------+--------+-----------------------|\n"))
+	rl.Write([]byte("+------+------------------+----------+-----------------------|\n"))
 }
 
 func recive_kill(json *map[string]interface{}, rl *readline.Instance) {
