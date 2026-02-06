@@ -22,6 +22,18 @@ func get_id(json *map[string]interface{}) int {
 	return id
 }
 
+func enforce_max_size(str string, size int) string {
+	var chars		[]rune
+	var lenght		int
+
+	chars = []rune(str)
+	lenght = len(chars)
+	if (lenght > size) {
+		return string(chars[lenght - size:])
+	}
+	return string(chars)
+}
+
 func recive_load(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
 	var flag string
 	var id int
@@ -158,9 +170,9 @@ func recive_ps(json *map[string]interface{}, rl *readline.Instance) {
 	var proc_lst []interface{}
 	var obj interface{}
 
-	rl.Write([]byte("+------+------------------------------+\n"))
-	rl.Write([]byte("| ID   | path                         |\n"))
-	rl.Write([]byte("+------+------------------------------+\n"))
+	rl.Write([]byte("+------+-----------------------------------------------------+\n"))
+	rl.Write([]byte("| ID   | path                                                |\n"))
+	rl.Write([]byte("+------+-----------------------------------------------------+\n"))
 	proc_lst, ok = (*json)["profiles"].([]interface{})
 	if !ok {
 		proc_lst = nil
@@ -180,11 +192,12 @@ func recive_ps(json *map[string]interface{}, rl *readline.Instance) {
 		if !ok {
 			path = "ERROR NO PATH"
 		}
+		path = enforce_max_size(path, 51)
 		rl.Write([]byte(
-			fmt.Sprintf("| %-4s | %-28s |\n", key, path),
+			fmt.Sprintf("| %-4s | %-51s |\n", key, path),
 		))
 	}
-	rl.Write([]byte("+------+------------------------------+\n"))
+	rl.Write([]byte("+------+-----------------------------------------------------+\n"))
 }
 
 func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
@@ -227,6 +240,9 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 		if !ok {
 			ts = "Null"
 		}
+		name = enforce_max_size(name, 16)
+		status = enforce_max_size(status, 8)
+		ts = enforce_max_size(ts, 21)
 		rl.Write([]byte(fmt.Sprintf("| %-4s | %-16s | %-8s | %-21s |\n", strconv.Itoa(id), name, status, ts)))
 	}
 	rl.Write([]byte("+------+------------------+----------+-----------------------|\n"))
