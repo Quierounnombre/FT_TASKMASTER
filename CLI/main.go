@@ -11,7 +11,7 @@ const config_filename = "taskmaster.yaml"
 type Cmd struct {
 	Cmd			string		`json:"cmd"`
 	Flags		[]string	`json:"flags"`
-	profile_id	int			`json:"profile_id"`
+	Profile_id	int			`json:"profile_id"`
 }
 
 func main() {

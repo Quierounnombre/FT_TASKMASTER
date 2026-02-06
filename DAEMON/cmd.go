@@ -19,6 +19,7 @@ func (c *Cmd) Parse_cmd(msg *Msg) {
 	fmt.Println("base =", c.base)
 	c.flags = msg.get_flags()
 	c.profile_id = msg.get_profile_id()
+	fmt.Println("MSG ID =", msg.get_profile_id())
 	msg.clean_content()
 }
 
@@ -30,6 +31,7 @@ func (c *Cmd) send_error(msg *Msg, errorStr string) {
 
 // Execute commands
 func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg) {
+	fmt.Println("id = ", c.profile_id)
 	switch c.base {
 	case "load":
 		if c.flags == nil {

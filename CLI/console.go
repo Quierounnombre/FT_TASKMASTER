@@ -34,6 +34,7 @@ func console_start(sk net.Conn, encoder *json.Encoder) {
 	var profile_id int
 
 	config_rl = set_config()
+	profile_id = 0
 	rl, err = readline.NewEx(config_rl)
 	if err != nil {
 		os.Exit(1)
@@ -51,7 +52,7 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 
 	if len(os.Args) > start_shell {
 		cmd.Cmd = os.Args[1]
-		cmd.profile_id = 0
+		cmd.Profile_id = 0
 		send_data(encoder, &cmd)
 	}
 	for true {
@@ -63,7 +64,7 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 			flags = strings.Split(line, " ")
 			cmd.Cmd = flags[0]
 			cmd.Flags = flags[1:]
-			cmd.profile_id = *profile_id
+			cmd.Profile_id = *profile_id
 			send_data(encoder, &cmd)
 		}
 	}
