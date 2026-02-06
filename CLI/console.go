@@ -51,9 +51,13 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 	var cmd Cmd
 
 	if len(os.Args) > start_shell {
-		cmd.Cmd = os.Args[1]
-		cmd.Profile_id = 0
-		send_data(encoder, &cmd)
+		if os.Args[1] == "help" {
+			rl.Write([]byte(cmd_help()))
+		} else {
+			cmd.Cmd = os.Args[1]
+			cmd.Profile_id = 0
+			send_data(encoder, &cmd)
+		}
 	}
 	for true {
 		line, err = rl.Readline()
