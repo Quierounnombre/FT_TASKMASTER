@@ -30,22 +30,9 @@ Settear wrapper the cmds
 ----> PABLETO PARTE <----
 TODO:
 - logs!
-- give back errors
-
-Executor:
-
-✅ Options to discard the program’s stdout/stderr or to redirect them to files
-✅ Environment variables to set before launching the program
-✅ A working directory to set before launching the program
-✅ An unmask to set before launching the program (check)
-Whether to start this program at launch or not
-
-Upper manager:
-- Whether the program should be restarted always, never, or on unexpected exits only
-- Which return codes represent an "expected" exit status
-- How long the program should be running after it’s started for it to be considered "successfully started"
-
-
+- borrar perfiles
+- testear el restart ya que ha morido gordo
+- for restart we dont really need the profile_id
 
 
 Old status:
@@ -60,7 +47,7 @@ Explicacion:
 manager has:
 profiles
 each profile has an Executor pointer containing all executions
-Executor could have all the data about:
+Executor have all the data about:
 - should be restarted?
 - Which signal does it stop it?
 - Options to discard the program’s stdout/stderr or to redirect them to files
