@@ -1,0 +1,23 @@
+# test_umask.yaml — File permission mask
+# EXPECTED: check_umask.sh creates files with permissions restricted by umask
+# VERIFY: Check stdout files for the numeric permissions reported
+process:
+  - name: umask-restrictive
+    cmd: /app/tests/scripts/check_umask.sh
+    restart: never
+    start_at_launch: true
+    umask: 0077
+    stdout: /tmp/test_umask_restrictive.log
+
+  - name: umask-permissive
+    cmd: /app/tests/scripts/check_umask.sh
+    restart: never
+    start_at_launch: true
+    umask: 0000
+    stdout: /tmp/test_umask_permissive.log
+
+  - name: umask-default
+    cmd: /app/tests/scripts/check_umask.sh
+    restart: never
+    start_at_launch: true
+    stdout: /tmp/test_umask_default.log

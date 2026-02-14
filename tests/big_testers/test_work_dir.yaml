@@ -1,0 +1,19 @@
+# test_work_dir.yaml — Custom working directory
+# EXPECTED: check_workdir.sh runs with pwd set to the specified work_dir
+# VERIFY:
+#   - Check stdout for "Current directory: /tmp" and "/app/tests"
+#   - Marker files should be created in the respective directories
+process:
+  - name: workdir-tmp
+    cmd: /app/tests/scripts/check_workdir.sh
+    restart: never
+    start_at_launch: true
+    work_dir: /tmp
+    stdout: /tmp/test_workdir_tmp.log
+
+  - name: workdir-tests
+    cmd: /app/tests/scripts/check_workdir.sh
+    restart: never
+    start_at_launch: true
+    work_dir: /app/tests
+    stdout: /tmp/test_workdir_tests.log

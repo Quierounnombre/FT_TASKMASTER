@@ -1,0 +1,23 @@
+# test_start_at_launch.yaml — Control whether tasks auto-start
+# EXPECTED:
+#   - "auto-start" starts immediately → should be "running"
+#   - "manual-start" does NOT start → should stay "pending" until you `start` it
+# VERIFY: `ls` → auto-start is running, manual-start is pending
+#         Then `start <manual-task-id>` → manual-start should start running
+process:
+  - name: auto-start
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true
+
+  - name: manual-start
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: false
+
+  - name: manual-finish
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: false
+    env:
+      EXIT_CODE: "0"

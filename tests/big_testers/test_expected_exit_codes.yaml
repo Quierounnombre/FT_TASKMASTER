@@ -1,0 +1,51 @@
+# test_expected_exit_codes.yaml — Custom expected exit codes
+# EXPECTED:
+#   - "exit-0" exits 0 → expected → "stopped"
+#   - "exit-42-ok" exits 42 → expected (42 is in list) → "stopped"
+#   - "exit-2-ok" exits 2 → expected → "stopped"
+#   - "exit-99-fail" exits 99 → unexpected (not in list) → "failed"
+# VERIFY: `ls` → first 3 tasks "stopped", last one "failed"
+process:
+  - name: exit-0
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: true
+    expected_exit:
+      - 0
+      - 42
+      - 2
+    env:
+      EXIT_CODE: "0"
+
+  - name: exit-42-ok
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: true
+    expected_exit:
+      - 0
+      - 42
+      - 2
+    env:
+      EXIT_CODE: "42"
+
+  - name: exit-2-ok
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: true
+    expected_exit:
+      - 0
+      - 42
+      - 2
+    env:
+      EXIT_CODE: "2"
+
+  - name: exit-99-fail
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: true
+    expected_exit:
+      - 0
+      - 42
+      - 2
+    env:
+      EXIT_CODE: "99"

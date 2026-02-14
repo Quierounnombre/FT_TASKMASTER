@@ -1,0 +1,54 @@
+# test_stress.yaml — Stress test with many concurrent processes
+# EXPECTED: 8+ processes running simultaneously with diverse configs
+# VERIFY: `ls` shows all processes active, system handles load correctly
+# EDGE CASES: race conditions, resource contention, rapid restart loops
+process:
+  - name: stress-long
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true
+    num_procs: 3
+    env:
+      HEARTBEAT_INTERVAL: "1"
+
+  - name: stress-crash
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    num_procs: 2
+    restart_atemps: 10
+    env:
+      CRASH_DELAY: "1"
+
+  - name: stress-burner
+    cmd: /app/tests/scripts/cpu_burner.sh
+    restart: always
+    start_at_launch: true
+    num_procs: 2
+    restart_atemps: 5
+    env:
+      BURN_TIME: "2"
+
+  - name: stress-finisher
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: true
+    num_procs: 3
+    env:
+      EXIT_CODE: "0"
+
+  - name: stress-random-fail
+    cmd: /app/scripts/randomFail.sh
+    restart: always
+    start_at_launch: true
+    num_procs: 2
+    restart_atemps: 8
+
+  - name: stress-output
+    cmd: /app/tests/scripts/write_outputs.sh
+    restart: always
+    start_at_launch: true
+    num_procs: 2
+    restart_atemps: 3
+    stdout: /tmp/stress_out.log
+    stderr: /tmp/stress_err.log

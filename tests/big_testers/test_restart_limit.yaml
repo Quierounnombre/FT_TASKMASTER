@@ -1,0 +1,30 @@
+# test_restart_limit.yaml — Maximum restart attempts
+# EXPECTED:
+#   - "limited-3" crashes repeatedly but stops restarting after 3 attempts
+#   - "limited-1" crashes and stops restarting after 1 attempt
+#   - "unlimited" crashes and keeps restarting forever (restart_atemps = 0)
+# VERIFY: `describe <taskID>` → check RestartCount stops at max
+process:
+  - name: limited-3
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    restart_atemps: 3
+    env:
+      CRASH_DELAY: "1"
+
+  - name: limited-1
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    restart_atemps: 1
+    env:
+      CRASH_DELAY: "1"
+
+  - name: unlimited
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    restart_atemps: 0
+    env:
+      CRASH_DELAY: "2"

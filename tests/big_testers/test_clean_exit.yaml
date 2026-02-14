@@ -1,0 +1,20 @@
+# test_clean_exit.yaml — Tasks that finish cleanly with exit 0
+# EXPECTED: All tasks should reach "success" status after a few seconds
+# VERIFY: `ls` should show all tasks as "success"
+process:
+  - name: quick-finish
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: true
+    env:
+      EXIT_CODE: "0"
+
+  - name: good-finish
+    cmd: /app/scripts/goodFinish.sh
+    restart: never
+    start_at_launch: true
+
+  - name: calculator
+    cmd: /app/tests/calculator/calculator.sh
+    restart: never
+    start_at_launch: true

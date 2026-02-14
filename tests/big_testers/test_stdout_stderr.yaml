@@ -1,0 +1,25 @@
+# test_stdout_stderr.yaml — Output file redirection
+# EXPECTED: stdout and stderr are written to separate files
+# VERIFY:
+#   cat /tmp/test_out.log   → should contain [STDOUT] lines
+#   cat /tmp/test_err.log   → should contain [STDERR] lines
+#   cat /tmp/test_both.log  → should contain [STDOUT] lines (stderr to separate file)
+process:
+  - name: output-splitter
+    cmd: /app/tests/scripts/write_outputs.sh
+    restart: never
+    start_at_launch: true
+    stdout: /tmp/test_out.log
+    stderr: /tmp/test_err.log
+
+  - name: stdout-only
+    cmd: /app/tests/scripts/write_outputs.sh
+    restart: never
+    start_at_launch: true
+    stdout: /tmp/test_both.log
+
+  - name: stderr-only
+    cmd: /app/tests/scripts/write_outputs.sh
+    restart: never
+    start_at_launch: true
+    stderr: /tmp/test_stderr_only.log

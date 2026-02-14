@@ -1,0 +1,17 @@
+# test_launch_wait.yaml — Launch wait timing
+# EXPECTED: slow_start.sh takes longer to initialize than launch_wait
+# VERIFY: Task should show "running" status and launch_wait is respected
+process:
+  - name: slow-starter
+    cmd: /app/tests/scripts/slow_start.sh
+    restart: never
+    start_at_launch: true
+    launch_wait: 3s
+    env:
+      STARTUP_DELAY: "5"
+
+  - name: fast-starter
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true
+    launch_wait: 1s

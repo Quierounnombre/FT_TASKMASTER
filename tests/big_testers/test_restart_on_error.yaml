@@ -1,0 +1,25 @@
+# test_restart_on_error.yaml — Restart only on unexpected exit codes
+# EXPECTED:
+#   - "crash-unexpected" exits 1 (unexpected) → watcher restarts it
+#   - "exit-expected" exits 42 (expected) → no restart, stays "stopped"
+# VERIFY: `describe <taskID>` to check RestartCount and status
+process:
+  - name: crash-unexpected
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: on_error
+    start_at_launch: true
+    expected_exit:
+      - 0
+    env:
+      CRASH_DELAY: "2"
+      CRASH_EXIT: "1"
+
+  - name: exit-expected
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: on_error
+    start_at_launch: true
+    expected_exit:
+      - 0
+      - 42
+    env:
+      EXIT_CODE: "42"

@@ -1,0 +1,281 @@
+# ============================================================================
+# test_everything.yaml — THE MEGA TEST: exercises EVERY feature together
+# ============================================================================
+# This profile uses ALL Process config fields on every task to verify
+# the daemon handles complex, real-world configurations correctly.
+#
+# WHAT TO VERIFY for each task:
+#   1. `ls`                → see all tasks and their statuses
+#   2. `describe <taskID>` → verify all fields are set correctly
+#   3. Check output files  → stdout/stderr written correctly
+#   4. Wait & observe      → restart behavior, exit codes, watcher actions
+#
+# FEATURES TESTED:
+#   ✓ name, cmd
+#   ✓ restart: always / on_error / never
+#   ✓ stop_signal
+#   ✓ work_dir
+#   ✓ stdout, stderr
+#   ✓ env
+#   ✓ restart_atemps
+#   ✓ expected_exit
+#   ✓ launch_wait
+#   ✓ kill_wait
+#   ✓ start_at_launch: true / false
+#   ✓ umask
+#   ✓ num_procs
+# ============================================================================
+
+process:
+  # ── 1. CLEAN EXIT with full config ─────────────────────────────────────────
+  # Exits cleanly with 0. Uses stdout, env, work_dir, umask.
+  # EXPECTED: status → "success"
+  - name: everything-clean
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    stop_signal: SIGTERM
+    work_dir: /tmp
+    stdout: /tmp/everything_clean_out.log
+    stderr: /tmp/everything_clean_err.log
+    env:
+      EXIT_CODE: "0"
+      APP_NAME: "mega-test"
+      APP_ENV: "production"
+    restart_atemps: 0
+    expected_exit:
+      - 0
+    launch_wait: 1s
+    kill_wait: 2s
+    start_at_launch: true
+    umask: 0022
+    num_procs: 1
+
+  # ── 2. ALWAYS RESTART with crash loop ──────────────────────────────────────
+  # Crashes every 2s, watcher restarts up to 5 times.
+  # EXPECTED: RestartCount increases to 5, then stops
+  - name: everything-always-crash
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    stop_signal: SIGTERM
+    work_dir: /app/tests
+    stdout: /tmp/everything_always_crash_out.log
+    stderr: /tmp/everything_always_crash_err.log
+    env:
+      CRASH_DELAY: "2"
+      CRASH_EXIT: "1"
+    restart_atemps: 5
+    expected_exit:
+      - 0
+    launch_wait: 1s
+    kill_wait: 3s
+    start_at_launch: true
+    umask: 0077
+    num_procs: 1
+
+  # ── 3. ON_ERROR RESTART with expected exit ─────────────────────────────────
+  # Exits 42, which IS expected → should NOT restart (status = "stopped")
+  # EXPECTED: status → "stopped", RestartCount = 0
+  - name: everything-on-error-ok
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: on_error
+    stop_signal: SIGTERM
+    work_dir: /tmp
+    stdout: /tmp/everything_onerror_ok_out.log
+    env:
+      EXIT_CODE: "42"
+    restart_atemps: 3
+    expected_exit:
+      - 0
+      - 42
+    launch_wait: 1s
+    kill_wait: 2s
+    start_at_launch: true
+    umask: 0022
+    num_procs: 1
+
+  # ── 4. ON_ERROR RESTART with unexpected exit ───────────────────────────────
+  # Exits 99, which is NOT expected → should restart up to 3 times
+  # EXPECTED: RestartCount increases to 3, then stops
+  - name: everything-on-error-fail
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: on_error
+    stop_signal: SIGTERM
+    stdout: /tmp/everything_onerror_fail_out.log
+    stderr: /tmp/everything_onerror_fail_err.log
+    env:
+      EXIT_CODE: "99"
+    restart_atemps: 3
+    expected_exit:
+      - 0
+    launch_wait: 1s
+    kill_wait: 2s
+    start_at_launch: true
+    umask: 0022
+    num_procs: 1
+
+  # ── 5. LONG RUNNING with signal handling + multiple instances ──────────────
+  # 2 instances of graceful shutdown. Test stop/kill commands.
+  # EXPECTED: both running, respond to stop commands
+  - name: everything-signal
+    cmd: /app/tests/scripts/graceful_shutdown.sh
+    restart: never
+    stop_signal: SIGTERM
+    work_dir: /app
+    stdout: /tmp/everything_signal_out.log
+    stderr: /tmp/everything_signal_err.log
+    env:
+      CLEANUP_TIME: "2"
+    restart_atemps: 0
+    expected_exit:
+      - 0
+    launch_wait: 1s
+    kill_wait: 5s
+    start_at_launch: true
+    umask: 0022
+    num_procs: 2
+
+  # ── 6. ENV VARS + STDOUT + WORKDIR combined ────────────────────────────────
+  # Verifies env injection, output redirection, and work_dir together
+  # EXPECTED: stdout file shows correct env vars and work_dir
+  - name: everything-env-out
+    cmd: /app/tests/scripts/check_env.sh
+    restart: never
+    stop_signal: SIGTERM
+    work_dir: /app/tests
+    stdout: /tmp/everything_env_out.log
+    stderr: /tmp/everything_env_err.log
+    env:
+      APP_NAME: "everything-test"
+      APP_ENV: "staging"
+      APP_PORT: "9090"
+      APP_DEBUG: "false"
+      CUSTOM_VAR: "mega_test_value"
+    restart_atemps: 0
+    expected_exit:
+      - 0
+    launch_wait: 1s
+    kill_wait: 2s
+    start_at_launch: true
+    umask: 0022
+    num_procs: 1
+
+  # ── 7. MANUAL START (start_at_launch: false) ───────────────────────────────
+  # Does NOT auto-start. Must be manually started via `start <taskID>`
+  # EXPECTED: stays "pending" until you issue `start`
+  - name: everything-manual
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    stop_signal: SIGTERM
+    work_dir: /app
+    stdout: /tmp/everything_manual_out.log
+    env:
+      HEARTBEAT_INTERVAL: "2"
+    restart_atemps: 0
+    expected_exit:
+      - 0
+    launch_wait: 2s
+    kill_wait: 3s
+    start_at_launch: false
+    umask: 0022
+    num_procs: 1
+
+  # ── 8. UMASK + WORKDIR check ───────────────────────────────────────────────
+  # Creates a file and checks permissions. Restrictive umask.
+  # EXPECTED: created file should have restricted permissions
+  - name: everything-umask
+    cmd: /app/tests/scripts/check_umask.sh
+    restart: never
+    stop_signal: SIGTERM
+    work_dir: /tmp
+    stdout: /tmp/everything_umask_out.log
+    env:
+      VERIFY_PERMS: "true"
+    restart_atemps: 0
+    expected_exit:
+      - 0
+    launch_wait: 1s
+    kill_wait: 2s
+    start_at_launch: true
+    umask: 0077
+    num_procs: 1
+
+  # ── 9. WORKDIR verification ────────────────────────────────────────────────
+  # Creates marker files in the working directory
+  # EXPECTED: marker file created in /app/tests
+  - name: everything-workdir
+    cmd: /app/tests/scripts/check_workdir.sh
+    restart: never
+    stop_signal: SIGTERM
+    work_dir: /app/tests
+    stdout: /tmp/everything_workdir_out.log
+    env:
+      MARKER_PREFIX: "mega"
+    restart_atemps: 0
+    expected_exit:
+      - 0
+    launch_wait: 1s
+    kill_wait: 2s
+    start_at_launch: true
+    umask: 0022
+    num_procs: 1
+
+  # ── 10. STRESS: Multiple fast-cycling tasks ────────────────────────────────
+  # 3 instances of CPU burners that finish and restart forever
+  # EXPECTED: rapid start/stop cycling tests the watcher under pressure
+  - name: everything-stress
+    cmd: /app/tests/scripts/cpu_burner.sh
+    restart: always
+    stop_signal: SIGTERM
+    work_dir: /tmp
+    stdout: /tmp/everything_stress_out.log
+    env:
+      BURN_TIME: "1"
+    restart_atemps: 10
+    expected_exit:
+      - 0
+    launch_wait: 1s
+    kill_wait: 2s
+    start_at_launch: true
+    umask: 0022
+    num_procs: 3
+
+  # ── 11. RANDOM FAIL with output + restarts ─────────────────────────────────
+  # Uses randomFail.sh — unpredictable failures
+  # EXPECTED: watcher restarts on failure, limited to 4 attempts
+  - name: everything-random
+    cmd: /app/scripts/randomFail.sh
+    restart: always
+    stop_signal: SIGTERM
+    work_dir: /app/scripts
+    stdout: /tmp/everything_random_out.log
+    stderr: /tmp/everything_random_err.log
+    env:
+      RANDOM_SEED: "42"
+    restart_atemps: 4
+    expected_exit:
+      - 0
+    launch_wait: 1s
+    kill_wait: 3s
+    start_at_launch: true
+    umask: 0022
+    num_procs: 1
+
+  # ── 12. SLOW STARTER with launch_wait ──────────────────────────────────────
+  # Takes 4s to initialize, launch_wait is 2s
+  # EXPECTED: tests how the daemon handles slow-starting processes
+  - name: everything-slow
+    cmd: /app/tests/scripts/slow_start.sh
+    restart: never
+    stop_signal: SIGTERM
+    work_dir: /app
+    stdout: /tmp/everything_slow_out.log
+    env:
+      STARTUP_DELAY: "4"
+    restart_atemps: 0
+    expected_exit:
+      - 0
+    launch_wait: 2s
+    kill_wait: 3s
+    start_at_launch: true
+    umask: 0022
+    num_procs: 1

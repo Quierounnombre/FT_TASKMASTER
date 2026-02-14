@@ -1,0 +1,47 @@
+# test_mixed_policies.yaml — Multiple processes with different restart policies
+# EXPECTED: Each process behaves according to its own restart policy
+# VERIFY: After a while, `ls` should show a mix of statuses:
+#   - "always-runner" → running (restarts after crash)
+#   - "on-error-runner" → running (restarts on unexpected exit)
+#   - "never-runner" → failed (stays dead after crash)
+#   - "stable-runner" → running (never crashes)
+#   - "finisher" → success (completes and stays done)
+process:
+  - name: always-runner
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    restart_atemps: 5
+    env:
+      CRASH_DELAY: "3"
+
+  - name: on-error-runner
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: on_error
+    start_at_launch: true
+    restart_atemps: 3
+    expected_exit:
+      - 0
+    env:
+      CRASH_DELAY: "2"
+
+  - name: never-runner
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: never
+    start_at_launch: true
+    env:
+      CRASH_DELAY: "1"
+
+  - name: stable-runner
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true
+    env:
+      HEARTBEAT_INTERVAL: "3"
+
+  - name: finisher
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: true
+    env:
+      EXIT_CODE: "0"

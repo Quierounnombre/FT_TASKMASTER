@@ -1,0 +1,23 @@
+# test_env_vars.yaml — Environment variable injection
+# EXPECTED: check_env.sh prints all injected variables
+# VERIFY: Check stdout file for correct variable values
+process:
+  - name: env-checker
+    cmd: /app/tests/scripts/check_env.sh
+    restart: never
+    start_at_launch: true
+    stdout: /tmp/test_env_stdout.log
+    env:
+      APP_NAME: "taskmaster"
+      APP_ENV: "testing"
+      APP_PORT: "8080"
+      APP_DEBUG: "true"
+      CUSTOM_VAR: "hello_world_42"
+
+  - name: env-in-loop
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true
+    env:
+      HEARTBEAT_INTERVAL: "1"
+      CUSTOM_MSG: "env-test-running"

@@ -1,0 +1,21 @@
+# test_stop_signal.yaml — Custom stop signal handling
+# EXPECTED: graceful_shutdown.sh handles SIGTERM and SIGUSR1
+# VERIFY:
+#   - Stop "signal-term" → should see SIGTERM cleanup in log
+#   - Stop "signal-handler" → should handle the signal in log
+process:
+  - name: signal-term
+    cmd: /app/tests/scripts/graceful_shutdown.sh
+    restart: never
+    start_at_launch: true
+    stop_signal: SIGTERM
+    stdout: /tmp/test_signal_term.log
+    env:
+      CLEANUP_TIME: "2"
+
+  - name: signal-handler
+    cmd: /app/scripts/signalReceiver.sh
+    restart: never
+    start_at_launch: true
+    stop_signal: SIGTERM
+    stdout: /tmp/test_signal_handler.log

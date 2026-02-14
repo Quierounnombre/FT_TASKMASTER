@@ -1,0 +1,19 @@
+# test_num_procs.yaml — Multiple instances of the same process
+# EXPECTED: 3 workers + 2 burners = 5 total tasks created
+# VERIFY: `ls` → should show worker_0, worker_1, worker_2, burner_0, burner_1
+process:
+  - name: worker
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true
+    num_procs: 3
+    env:
+      HEARTBEAT_INTERVAL: "3"
+
+  - name: burner
+    cmd: /app/tests/scripts/cpu_burner.sh
+    restart: never
+    start_at_launch: true
+    num_procs: 2
+    env:
+      BURN_TIME: "2"

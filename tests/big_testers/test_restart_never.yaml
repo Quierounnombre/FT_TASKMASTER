@@ -1,0 +1,17 @@
+# test_restart_never.yaml — No restart after failure
+# EXPECTED: Tasks crash once and stay in "failed" status permanently
+# VERIFY: `ls` → status stays "failed", RestartCount = 0
+process:
+  - name: crash-no-restart
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: never
+    start_at_launch: true
+    env:
+      CRASH_DELAY: "1"
+
+  - name: bad-exit-no-restart
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: true
+    env:
+      EXIT_CODE: "137"

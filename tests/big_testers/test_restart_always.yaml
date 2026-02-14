@@ -1,0 +1,19 @@
+# test_restart_always.yaml — Watcher should always restart these tasks
+# EXPECTED: Tasks crash and the watcher restarts them repeatedly
+# VERIFY: `describe <taskID>` → RestartCount should keep increasing
+process:
+  - name: always-restart-crash
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    env:
+      CRASH_DELAY: "2"
+
+  - name: always-restart-exit42
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: always
+    start_at_launch: true
+    expected_exit:
+      - 0
+    env:
+      EXIT_CODE: "42"

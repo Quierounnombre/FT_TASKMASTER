@@ -1,0 +1,23 @@
+# test_kill_wait.yaml — Grace period before SIGKILL
+# EXPECTED: graceful_shutdown.sh takes CLEANUP_TIME to shut down
+#   - "fast-kill" has short kill_wait → should be killed quickly
+#   - "slow-kill" has long kill_wait → should have time to cleanup
+# VERIFY: Stop both tasks → check if cleanup messages appear in stdout
+process:
+  - name: fast-kill
+    cmd: /app/tests/scripts/graceful_shutdown.sh
+    restart: never
+    start_at_launch: true
+    kill_wait: 1s
+    stdout: /tmp/test_fastkill.log
+    env:
+      CLEANUP_TIME: "5"
+
+  - name: slow-kill
+    cmd: /app/tests/scripts/graceful_shutdown.sh
+    restart: never
+    start_at_launch: true
+    kill_wait: 10s
+    stdout: /tmp/test_slowkill.log
+    env:
+      CLEANUP_TIME: "3"
