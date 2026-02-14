@@ -10,7 +10,7 @@ process:
       EXIT_CODE: "0"
 
   - name: good-finish
-    cmd: /app/scripts/goodFinish.sh
+    cmd: /app/tests/scripts/goodFinish.sh
     restart: never
     start_at_launch: true
 

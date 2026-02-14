@@ -14,7 +14,7 @@ process:
       CLEANUP_TIME: "2"
 
   - name: signal-handler
-    cmd: /app/scripts/signalReceiver.sh
+    cmd: /app/tests/scripts/signalReceiver.sh
     restart: never
     start_at_launch: true
     stop_signal: SIGTERM

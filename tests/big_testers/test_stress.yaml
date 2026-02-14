@@ -38,7 +38,7 @@ process:
       EXIT_CODE: "0"
 
   - name: stress-random-fail
-    cmd: /app/scripts/randomFail.sh
+    cmd: /app/tests/scripts/randomFail.sh
     restart: always
     start_at_launch: true
     num_procs: 2
