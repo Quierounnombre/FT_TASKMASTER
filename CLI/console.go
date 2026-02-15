@@ -62,6 +62,7 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 	for true {
 		line, err = rl.Readline()
 		if err != nil {
+			rl.Close()
 			os.Exit(1)
 		}
 		if !local_cmds(profile_id, line, rl) {

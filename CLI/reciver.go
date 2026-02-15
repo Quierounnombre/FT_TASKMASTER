@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
+	"os"
 	"github.com/chzyer/readline"
 )
 
@@ -159,6 +159,10 @@ func recive_error(json *map[string]interface{}, rl *readline.Instance) {
 		flag = "ERROR MISSING CONTENT"
 	}
 	rl.Write([]byte("Error: " + flag + "\n"))
+	if len(os.Args) > start_shell {
+		rl.Close()
+		os.Exit(1)
+	}
 }
 
 func recive_ps(json *map[string]interface{}, rl *readline.Instance) {
