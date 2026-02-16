@@ -39,6 +39,7 @@ TODO:
 - borrar perfiles
 - testear el restart ya que ha morido gordo
 - for restart we dont really need the profile_id
+- reload needs path from manager
 
 
 Old status:
