@@ -55,6 +55,7 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 			rl.Write([]byte(cmd_help()))
 		} else {
 			cmd.Cmd = os.Args[1]
+			cmd.Flags = os.Args[2:]
 			cmd.Profile_id = 0
 			send_data(encoder, &cmd)
 		}
