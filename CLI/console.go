@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
 	"github.com/chzyer/readline"
 )
 
@@ -34,11 +33,11 @@ func console_start(sk net.Conn, encoder *json.Encoder) {
 	var profile_id int
 
 	config_rl = set_config()
-	profile_id = 0
 	rl, err = readline.NewEx(config_rl)
 	if err != nil {
 		os.Exit(1)
 	}
+	profile_id = set_profile_id(rl)
 	go recive_data(sk, rl, &profile_id)
 	console(rl, encoder, &profile_id)
 }
@@ -56,7 +55,7 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 		} else {
 			cmd.Cmd = os.Args[1]
 			cmd.Flags = os.Args[2:]
-			cmd.Profile_id = 0
+			cmd.Profile_id = *profile_id
 			send_data(encoder, &cmd)
 		}
 	}
@@ -90,6 +89,49 @@ func local_cmds(profile_id *int, line string, rl *readline.Instance) bool {
 	return (false)
 }
 
+func set_profile_id(rl *readline.Instance) int {
+	var profile		int
+	var args_len	int
+	var err			error
+	var arg_line	string
+
+	profile = 0
+	args_len = len(os.Args)
+	args_len--
+	if args_len > start_shell {
+		for args_len > 0 {
+			if os.Args[args_len] == "-p" {
+				args_len++
+				arg_line = os.Args[args_len]
+				profile, err = strconv.Atoi(arg_line)
+				if err != nil {
+					rl.Write([]byte("-p invalid profile, make sure is a int, setting default(0)\n"))
+					return 0
+				}
+				return profile
+			}
+			args_len--
+		}
+		rl.Write([]byte("-p not found, setting default(0)\n"))
+	}
+	return 0
+}
+
+func extract_args(og_args []string) []string {
+	var args	[]string
+	var val		string
+	var pos		int
+
+	for pos, val = range og_args {
+		if val == "-p" {
+			pos++
+		} else {
+			args = append(args, val)
+		}
+	}
+	return args
+}
+
 const bold = "\033[1m"
 const reset = "\033[0m"
 
@@ -97,16 +139,17 @@ func cmd_help() string {
 	var str string
 
 	str = string(str + bold + "load" + reset + "	{PATH}		Load a taskmaster.yaml in the provided path\n")
-	str = string(str + bold + "reload" + reset + "	(ID)		Reload the configuration file with the given id\n")
+	str = string(str + bold + "reload" + reset + "	(ID)		Reload the configuration file with the given task id\n")
 	str = string(str + bold + "stop" + reset + "	{TARGET}	Stop the target process\n")
 	str = string(str + bold + "start" + reset + "	{TARGET}	Start the target process\n")
 	str = string(str + bold + "restart" + reset + "	{TARGET}	Restart the target process\n")
 	str = string(str + bold + "describe" + reset + "{TARGET}	Describe the target process\n")
-	str = string(str + bold + "ps" + reset + "					List all the profiles and show their id\n")
-	str = string(str + bold + "ls" + reset + "		(ID)		List all the process within a give id\n")
-	str = string(str + bold + "ch" + reset + "		{ID}		Modify the working id\n")
-	str = string(str + bold + "wichid" + reset + "				Print the current id in console\n")
+	str = string(str + bold + "ps" + reset + "					List all the profiles and show their task id, within a profile id\n")
+	str = string(str + bold + "ls" + reset + "		(ID)		List all the process within a profile id\n")
+	str = string(str + bold + "ch" + reset + "		{ID}		Modify the working profile id\n")
+	str = string(str + bold + "wichid" + reset + "				Print the current profile id in console\n")
 	str = string(str + bold + "help" + reset + "				Show this info\n")
+	str = string(str + bold + "-p" + reset + "					Set the profile id to the indicated number\n")
 	str = string(str + "\n Information in {} is a MUST and can't be skipped\n")
 	str = string(str + "Information in () is a OPTIONAL and the id is the current id\n")
 	str = string(str + "Current id is the the one modify by loading a configuration, or ch\n")
