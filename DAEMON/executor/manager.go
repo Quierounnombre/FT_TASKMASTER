@@ -1,11 +1,12 @@
 package executor
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"slices"
+	"strconv"
 )
 
 func NewManager() *Manager {
@@ -150,7 +151,7 @@ func (m *Manager) ListProfiles() []ListProfiles {
 			FilePath:  profile.configFilePath,
 		})
 	}
-    slices.SortFunc(profileIDs, func(a, b ListProfiles) int {
+	slices.SortFunc(profileIDs, func(a, b ListProfiles) int {
 		return a.ProfileID - b.ProfileID
 	})
 	fmt.Println("Profile IDs: ", profileIDs)
@@ -182,7 +183,7 @@ func (m *Manager) InfoStatusTasks(profileID int) ([]*TaskInfo, error) {
 		m.logger.Error("Cmd: InfoStatusTasks: " + err.Error())
 		return nil, err
 	}
-    slices.SortFunc(backInfoStatusTasks, func(a, b *TaskInfo) int {
+	slices.SortFunc(backInfoStatusTasks, func(a, b *TaskInfo) int {
 		return a.TaskID - b.TaskID
 	})
 	return backInfoStatusTasks, nil
@@ -269,17 +270,16 @@ func (m *Manager) Kill(profileID, taskID int) (int, error) {
 }
 
 func (m *Manager) Restart(profileID, taskID int) (int, error) {
-	m.logger.Info("Restarting task " + strconv.Itoa(taskID) + " of profile " + strconv.Itoa(profileID))
-	profile, err := m.CheckProfileExists(profileID)
-	if err != nil {
-		m.logger.Error("Cmd: Restart: Profile " + strconv.Itoa(profileID) + " not found")
-		return -1, err
+	m.logger.Info("Restarting task " + strconv.Itoa(taskID))
+	for _, profile := range m.profiles {
+		if _, err := profile.executor.GetStatus(taskID); err == nil {
+			backInt, err := profile.executor.Restart(taskID)
+			if err != nil {
+				m.logger.Error("Cmd: Restart: " + err.Error())
+				return -1, err
+			}
+			return backInt, nil
+		}
 	}
-
-	backInt, err := profile.executor.Restart(taskID)
-	if err != nil {
-		m.logger.Error("Cmd: Restart: " + err.Error())
-		return -1, err
-	}
-	return backInt, nil
+	return -1, errors.New("task not found")
 }

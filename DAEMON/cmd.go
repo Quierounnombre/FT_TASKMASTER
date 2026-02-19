@@ -62,14 +62,14 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			c.send_error(msg, "Reload missing target")
 			return
 		}
-		tmp := get_config_from_file_name(c.flags[0])
+		profileID, _ := strconv.Atoi(c.flags[0])
+		tmp := get_config_from_file_name(manager.GetProfilePath(profileID))
 		if tmp == nil {
 			c.send_error(msg, "Check file existance")
 			return
 		}
-		PrintFile_ConfigStruct(*tmp) //temporary
+		PrintFile_ConfigStruct(*tmp)
 		execConfig := convertToExecutorConfig(*tmp)
-		profileID, _ := strconv.Atoi(c.flags[0])
 		newProfileID, err := manager.ReloadProfile(execConfig, profileID)
 		tasks, err := manager.InfoStatusTasks(newProfileID)
 		if err != nil {
@@ -81,6 +81,21 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 		msg.add_payload("flags", c.flags[0])
 		msg.add_payload("id", newProfileID)
 		msg.add_payload("task", tasks)
+
+	case "unload":
+		if c.flags == nil {
+			c.send_error(msg, "Unload missing target")
+			return
+		}
+		profileID, _ := strconv.Atoi(c.flags[0])
+		err := manager.RemoveProfile(profileID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+
+		msg.add_payload("cmd", "unload")
+		msg.add_payload("flags", c.flags[0])
 
 	case "stop":
 		if c.flags == nil {
@@ -124,10 +139,6 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 	case "restart":
 		if c.flags == nil {
 			c.send_error(msg, "Restart missing target")
-			return
-		}
-		if c.profile_id == 0 {
-			c.send_error(msg, "Lack connection to profile")
 			return
 		}
 		taskID, _ := strconv.Atoi(c.flags[0])

@@ -48,6 +48,7 @@ type Task struct {
 	ID                int
 	Name              string
 	Cmd               *exec.Cmd
+	CmdStr            string
 	Status            Status
 	ExitCode          int
 	RestartCount      int

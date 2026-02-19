@@ -74,6 +74,7 @@ func (e *Executor) initTask(process Process, nextID *int) {
 			ID:                taskID,
 			Name:              instanceName,
 			Cmd:               cmd,
+			CmdStr:            process.Cmd,
 			Status:            StatusPending,
 			StdoutWriter:      process.Stdout,
 			StderrWriter:      process.Stderr,
@@ -108,6 +109,27 @@ func (e *Executor) isExpectedExitCode(task *Task) bool {
 	return slices.Contains(task.ExpectedExitCodes, task.ExitCode)
 }
 
+// recreateCmd creates a fresh exec.Cmd from the task's stored configuration.
+// Go's exec.Cmd can only be used once, so this is needed for restarts.
+func (e *Executor) recreateCmd(task *Task) {
+	cmd := exec.Command("/bin/sh", "-c", task.CmdStr)
+	cmd.Env = task.Env
+	if task.StdoutWriter != nil {
+		cmd.Stdout = task.StdoutWriter
+	} else {
+		cmd.Stdout = io.Discard
+	}
+	if task.StderrWriter != nil {
+		cmd.Stderr = task.StderrWriter
+	} else {
+		cmd.Stderr = io.Discard
+	}
+	if task.WorkingDir != "" {
+		cmd.Dir = task.WorkingDir
+	}
+	task.Cmd = cmd
+}
+
 func (e *Executor) Start(id int) (int, error) {
 	task, err := e.CheckTaskExists(id)
 	if err != nil {
@@ -115,7 +137,8 @@ func (e *Executor) Start(id int) (int, error) {
 	}
 
 	e.mu.Lock()
-	task.Status = StatusPending
+	e.recreateCmd(task)
+	task.Status = StatusRunning
 	task.StartTime = time.Now()
 	e.mu.Unlock()
 
@@ -205,13 +228,13 @@ func (e *Executor) Stop(id int) (int, error) {
 }
 
 func (e *Executor) Kill(id int) (int, error) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-
 	task, err := e.CheckTaskExists(id)
 	if err != nil {
 		return -1, err
 	}
+
+	e.mu.Lock()
+	defer e.mu.Unlock()
 
 	if task.Status != StatusRunning {
 		return -1, fmt.Errorf("task %d is not running", id)
@@ -224,16 +247,23 @@ func (e *Executor) Kill(id int) (int, error) {
 	return id, nil
 }
 
+// Restart kills the task and sets it to StatusPending.
+// The watcher will detect the pending status and start it asynchronously,
+// avoiding blocking the daemon's main event loop.
 func (e *Executor) Restart(id int) (int, error) {
-	_, err := e.Kill(id)
+	task, err := e.CheckTaskExists(id)
 	if err != nil {
 		return -1, err
 	}
 
-	_, err = e.Start(id)
-	if err != nil {
-		return -1, err
+	e.mu.Lock()
+
+	if task.Status == StatusRunning && task.Cmd.Process != nil {
+		task.Cmd.Process.Kill()
 	}
+	task.Status = StatusPending
+
+	e.mu.Unlock()
 
 	return id, nil
 }
