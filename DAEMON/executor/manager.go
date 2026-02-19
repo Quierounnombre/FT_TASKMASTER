@@ -124,6 +124,7 @@ func (m *Manager) ReloadProfile(config File_Config, profileID int) (int, error) 
 
 	taskIDs := profile.executor.ListTasks()
 	for _, taskID := range taskIDs {
+		//TODO: THIS SHOULD BE KILL????
 		profile.executor.Stop(taskID)
 	}
 

@@ -172,6 +172,9 @@ func cmd_help() string {
 	str = string(str + bold + "start" + reset + "	{TARGET}	Start the target process\n")
 	str = string(str + bold + "restart" + reset + "	{TARGET}	Restart the target process\n")
 	str = string(str + bold + "describe" + reset + "{TARGET}	Describe the target process\n")
+	str = string(str + bold + "kill" + reset + "	{TARGET}	Kill the indicated process\n")
+	str = string(str + bold + "erase" + reset + "	{TARGET}	Erase the indicated process\n")
+	str = string(str + bold + "russian" + reset + "				Russian roulet for your process\n")
 	str = string(str + bold + "ps" + reset + "					List all the profiles and show their task id, within a profile id\n")
 	str = string(str + bold + "ls" + reset + "		(ID)		List all the process within a profile id\n")
 	str = string(str + bold + "ch" + reset + "		{ID}		Modify the working profile id\n")
@@ -180,6 +183,6 @@ func cmd_help() string {
 	str = string(str + bold + "-p" + reset + "					Set the profile id to the indicated number\n")
 	str = string(str + "\n Information in {} is a MUST and can't be skipped\n")
 	str = string(str + "Information in () is a OPTIONAL and the id is the current id\n")
-	str = string(str + "Current id is the the one modify by loading a configuration, or ch\n")
+	str = string(str + "Current id is the the one modify by loading a configuration, using -p, or ch\n")
 	return (str)
 }

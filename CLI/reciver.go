@@ -269,12 +269,34 @@ func recive_ch(json *map[string]interface{}, rl *readline.Instance, profile_id *
 	id = get_id(json)
 	if id != -1 {
 		*profile_id = id
-	}
-	if id != -1 {
 		rl.Write([]byte("Switched to id: " + strconv.Itoa(id) + "\n"))
 	} else {
 		rl.Write([]byte("Profile dosen't exists\n"))
 	}
+}
+
+func recive_erase(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
+	var id		int
+
+	id = get_id(json)
+	if id != -1 {
+		*profile_id = 0
+		rl.Write([]byte("Profile erased\n"))
+	} else {
+		rl.Write([]byte("Error erasing profile"))
+	}
+}
+
+func recive_russian(json *map[string]interface{}, rl *readline.Instance) {
+	var unlucky		string
+	var ok			bool
+
+	unlucky, ok = (*json)["unlucky"].(string)
+	if !ok {
+		rl.Write([]byte("Need more players"))
+		return
+	}
+	rl.Write([]byte("Our winner winner chiken dinner is: " + unlucky + "\n"))
 }
 
 func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
@@ -311,6 +333,10 @@ func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *in
 		recive_kill(json, rl)
 	case "ch":
 		recive_ch(json, rl, profile_id)
+	case "erase":
+		recive_erase(json, rl, profile_id)
+	case "russian":
+		recive_russian(json, rl)
 	default:
 		rl.Write([]byte("DEFAULT"))
 	}

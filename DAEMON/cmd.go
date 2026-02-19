@@ -231,6 +231,21 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 		msg.add_payload("cmd", "ch")
 		msg.add_payload("id", profileID)
 
+	case "erase":
+		if c.flags == nil {
+			c.send_error(msg, "erase missing target")
+			return
+		}
+		profileID, _ := strconv.Atoi(c.flags[0])
+		profileID, err := manager.EraseProfile(profileID)
+		if err != nil {
+			c.send_error(msg, err.Error())
+			return
+		}
+		msg.add_payload("cmd", "erase")
+		msg.add_payload("id", profileID)
+
+
 	default:
 		c.send_error(msg, "Da hell is that? "+c.base)
 	}
