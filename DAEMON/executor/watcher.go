@@ -61,7 +61,10 @@ func (w *Watcher) checkProfile(profile *Profile) {
 			continue
 		}
 		if task.Status == StatusPending {
-			profile.executor.mu.Unlock() // Do we really need this?
+			if !task.startAtLaunch {
+				continue
+			}
+			profile.executor.mu.Unlock()
 			w.manager.Start(profile.ID, id)
 			profile.executor.mu.Lock()
 			continue

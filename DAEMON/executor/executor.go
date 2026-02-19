@@ -85,6 +85,7 @@ func (e *Executor) initTask(process Process, nextID *int) {
 			MaxRestarts:       process.Restart_atempts,
 			restartPolicy:     process.Restart,
 			launchWait:        process.Launch_wait,
+			startAtLaunch:     process.Start_at_launch,
 		}
 		e.tasks[taskID] = task
 	}

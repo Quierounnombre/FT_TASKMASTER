@@ -62,6 +62,7 @@ type Task struct {
 	Umask             int
 	restartPolicy     string
 	launchWait        time.Duration
+	startAtLaunch     bool
 }
 
 // Executor type
