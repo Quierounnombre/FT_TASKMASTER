@@ -20,7 +20,6 @@ func (m *Msg) reply() {
 	var err error
 
 	err = m.encoder.Encode(m.content)
-	fmt.Println("RESP ESTATE JSON: ", m.content)
 	if err != nil {
 		fmt.Println("Error socket not working")
 		fmt.Println(err)
@@ -55,9 +54,9 @@ func (m *Msg) get_flags() []string {
 }
 
 func (m *Msg) get_profile_id() int {
-	var ok				bool
-	var profile_id		float64
-	var id				int
+	var ok bool
+	var profile_id float64
+	var id int
 
 	profile_id, ok = m.content["profile_id"].(float64)
 	id = int(profile_id)
