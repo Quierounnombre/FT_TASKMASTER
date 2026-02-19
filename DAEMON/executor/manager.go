@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"slices"
 )
 
 func NewManager() *Manager {
@@ -139,6 +140,9 @@ func (m *Manager) ListProfiles() []ListProfiles {
 			FilePath:  profile.configFilePath,
 		})
 	}
+    slices.SortFunc(profileIDs, func(a, b ListProfiles) int {
+		return a.ProfileID - b.ProfileID
+	})
 	fmt.Println("Profile IDs: ", profileIDs)
 	return profileIDs
 }
@@ -168,6 +172,9 @@ func (m *Manager) InfoStatusTasks(profileID int) ([]*TaskInfo, error) {
 		m.logger.Error("Cmd: InfoStatusTasks: " + err.Error())
 		return nil, err
 	}
+    slices.SortFunc(backInfoStatusTasks, func(a, b *TaskInfo) int {
+		return a.TaskID - b.TaskID
+	})
 	return backInfoStatusTasks, nil
 }
 
