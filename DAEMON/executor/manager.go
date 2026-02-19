@@ -41,6 +41,16 @@ func (m *Manager) Shutdown() {
 	}
 }
 
+func (m *Manager) GetProfilePath(profileID int) string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	profile, exists := m.profiles[profileID]
+	if !exists {
+		return ""
+	}
+	return profile.configFilePath
+}
+
 // Check if profile exists
 func (m *Manager) CheckProfileExists(profileID int) (*Profile, error) {
 	m.mu.RLock()
