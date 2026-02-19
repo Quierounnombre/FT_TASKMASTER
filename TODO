@@ -35,6 +35,8 @@ reload missing target error
 
 ----> PABLETO PARTE <----
 TODO:
+- haciendo el everything_test veo que hay procesos que no se inician bien o la salida que deberia ser correcta sale mal ergo:
+- CHECK SHIT
 
 Old status:
 Hasta ahora lo que hemos hecho son un manager que tiene profiles (cada archivo de configuracion)
