@@ -35,12 +35,6 @@ reload missing target error
 
 ----> PABLETO PARTE <----
 TODO:
-- logs!
-- borrar perfiles
-- testear el restart ya que ha morido gordo
-- for restart we dont really need the profile_id
-- reload needs path from manager
-
 
 Old status:
 Hasta ahora lo que hemos hecho son un manager que tiene profiles (cada archivo de configuracion)

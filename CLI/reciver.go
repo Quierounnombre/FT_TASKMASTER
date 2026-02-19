@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
-	"os"
+
 	"github.com/chzyer/readline"
 )
 
@@ -23,13 +24,13 @@ func get_id(json *map[string]interface{}) int {
 }
 
 func enforce_max_size(str string, size int) string {
-	var chars		[]rune
-	var lenght		int
+	var chars []rune
+	var lenght int
 
 	chars = []rune(str)
 	lenght = len(chars)
-	if (lenght > size) {
-		return string(chars[lenght - size:])
+	if lenght > size {
+		return string(chars[lenght-size:])
 	}
 	return string(chars)
 }
@@ -108,43 +109,65 @@ func recive_restart(json *map[string]interface{}, rl *readline.Instance) {
 }
 
 func recive_describe(json *map[string]interface{}, rl *readline.Instance) {
+	var task map[string]interface{}
+	var ok bool
 	var fields []string
-	var add func(string)
+	var add func(string, string)
 	var b strings.Builder
 	var key string
+	var label string
+	var i int
 	var value interface{}
 	var env []interface{}
 
-	add = func(key string) {
-		b.WriteString(fmt.Sprintf("%-17s: %v\n", key, (*json)[key]))
+	// The daemon wraps task info under a "task" key
+	task, ok = (*json)["task"].(map[string]interface{})
+	if !ok {
+		rl.Write([]byte("ERROR: describe response missing 'task' field\n"))
+		return
 	}
+
+	add = func(label string, key string) {
+		b.WriteString(fmt.Sprintf("%-17s: %v\n", label, task[key]))
+	}
+
 	fields = []string{
-		"ID",
-		"Name",
-		"Status",
-		"ExitCode",
-		"RestartCount",
-		"MaxRestarts",
-		"StartTime",
-		"WorkingDir",
-		"Env",
-		"ExpectedExitCodes",
-		"Umask",
-		"restartPolicy",
-		"launchWait",
-		"Cmd",
-		"StdoutWriter",
-		"StderrWriter",
+		"id", "name", "status", "exitCode", "restartCount",
+		"maxRestarts", "startTime", "workingDir", "env",
+		"expectedExitCodes", "umask", "restartPolicy", "cmd",
 	}
+	labels := map[string]string{
+		"id":                "ID",
+		"name":              "Name",
+		"status":            "Status",
+		"exitCode":          "ExitCode",
+		"restartCount":      "RestartCount",
+		"maxRestarts":       "MaxRestarts",
+		"startTime":         "StartTime",
+		"workingDir":        "WorkingDir",
+		"env":               "Env",
+		"expectedExitCodes": "ExpectedExitCodes",
+		"umask":             "Umask",
+		"restartPolicy":     "RestartPolicy",
+		"cmd":               "Cmd",
+	}
+
 	for _, key = range fields {
-		if key == "Env" {
-			b.WriteString(fmt.Sprintf("%-17s:\n", key))
-			env, _ = (*json)[key].([]interface{})
-			for _, value = range env {
-				b.WriteString(fmt.Sprintf("  - %v\n", value))
+		label = labels[key]
+		if key == "env" {
+			env, _ = task[key].([]interface{})
+			for i, value = range env {
+				if i == 0 {
+					b.WriteString(fmt.Sprintf("%-17s: - %v\n", label, value))
+				} else {
+					b.WriteString(fmt.Sprintf("%-19s- %v\n", "", value))
+				}
+			}
+			if len(env) == 0 {
+				b.WriteString(fmt.Sprintf("%-17s:\n", label))
 			}
 		} else {
-			add(key)
+			add(label, key)
 		}
 	}
 	rl.Write([]byte(b.String()))
@@ -205,15 +228,15 @@ func recive_ps(json *map[string]interface{}, rl *readline.Instance) {
 }
 
 func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
-	var ok				bool
-	var proc_lst		[]interface{}
-	var proc			map[string]interface{}
-	var id				int
-	var id_float		float64
-	var name			string
-	var status			string
-	var ts				string
-	var obj				interface{}
+	var ok bool
+	var proc_lst []interface{}
+	var proc map[string]interface{}
+	var id int
+	var id_float float64
+	var name string
+	var status string
+	var ts string
+	var obj interface{}
 
 	rl.Write([]byte("+------+------------------+----------+-----------------------|\n"))
 	rl.Write([]byte("|  ID  | Name             |  Status  | Timestamp             |\n"))
