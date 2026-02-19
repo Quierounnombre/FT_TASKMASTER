@@ -275,13 +275,13 @@ func recive_ch(json *map[string]interface{}, rl *readline.Instance, profile_id *
 	}
 }
 
-func recive_erase(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
+func recive_unload(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
 	var id		int
 
 	id = get_id(json)
 	if id != -1 {
 		*profile_id = 0
-		rl.Write([]byte("Profile erased\n"))
+		rl.Write([]byte("Profile unloadd\n"))
 	} else {
 		rl.Write([]byte("Error erasing profile"))
 	}
@@ -333,8 +333,8 @@ func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *in
 		recive_kill(json, rl)
 	case "ch":
 		recive_ch(json, rl, profile_id)
-	case "erase":
-		recive_erase(json, rl, profile_id)
+	case "unload":
+		recive_unload(json, rl, profile_id)
 	case "russian":
 		recive_russian(json, rl)
 	default:

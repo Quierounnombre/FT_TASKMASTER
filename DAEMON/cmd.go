@@ -230,20 +230,27 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 
 		msg.add_payload("cmd", "ch")
 		msg.add_payload("id", profileID)
-
-	case "erase":
-		if c.flags == nil {
-			c.send_error(msg, "erase missing target")
+	
+	case "russian":
+		if c.profile_id == 0 {
+			c.send_error(msg, "Set a profile first dude")
 			return
 		}
-		profileID, _ := strconv.Atoi(c.flags[0])
-		profileID, err := manager.EraseProfile(profileID)
+		tasks, err := manager.InfoStatusTasks(c.profile_id)
 		if err != nil {
 			c.send_error(msg, err.Error())
 			return
 		}
-		msg.add_payload("cmd", "erase")
-		msg.add_payload("id", profileID)
+		//Fast random
+		for _, task := range tasks {
+			newProfileID, err := manager.Kill(c.profile_id, task.TaskID)
+			if err != nil {
+				c.send_error(msg, err.Error())
+				return
+			}
+			msg.add_payload("cmd", "russian")
+			msg.add_payload("unlucky", newProfileID)
+		}
 
 
 	default:
