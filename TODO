@@ -25,9 +25,9 @@ Establecer un protocolo (idea, cmd + contenido)
 Diseñar comandos
 SIGHUP para recargar config
 Settear wrapper the cmds
+-p/-profile
 
 New task from 16/02/2026
--p/-profile
 Ordenar id en reciver
 Revisar restart CLI
 Cmd para matar perfiles

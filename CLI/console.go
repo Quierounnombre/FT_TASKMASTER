@@ -54,8 +54,8 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 			rl.Write([]byte(cmd_help()))
 		} else {
 			cmd.Cmd = os.Args[1]
-			cmd.Flags = os.Args[2:]
-			cmd.Profile_id = *profile_id
+			cmd.Flags = extract_args(os.Args[2:])
+			cmd.Profile_id = obtain_profile_id_from_flags(os.Args[2:], *profile_id, rl)
 			send_data(encoder, &cmd)
 		}
 	}
@@ -68,8 +68,8 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 		if !local_cmds(profile_id, line, rl) {
 			flags = strings.Split(line, " ")
 			cmd.Cmd = flags[0]
-			cmd.Flags = flags[1:]
-			cmd.Profile_id = *profile_id
+			cmd.Flags = extract_args(flags[1:])
+			cmd.Profile_id = obtain_profile_id_from_flags(flags[1:], *profile_id, rl)
 			send_data(encoder, &cmd)
 		}
 	}
@@ -91,40 +91,68 @@ func local_cmds(profile_id *int, line string, rl *readline.Instance) bool {
 
 func set_profile_id(rl *readline.Instance) int {
 	var profile		int
-	var args_len	int
 	var err			error
-	var arg_line	string
+	var val			string
+	var extract		bool
 
 	profile = 0
-	args_len = len(os.Args)
-	args_len--
-	if args_len > start_shell {
-		for args_len > 0 {
-			if os.Args[args_len] == "-p" {
-				args_len++
-				arg_line = os.Args[args_len]
-				profile, err = strconv.Atoi(arg_line)
+	extract = false
+	if len(os.Args) > start_shell {
+		for _, val = range os.Args {
+			if val == "-p" {
+				extract = true
+			} else if extract {
+				profile, err = strconv.Atoi(val)
 				if err != nil {
 					rl.Write([]byte("-p invalid profile, make sure is a int, setting default(0)\n"))
 					return 0
 				}
 				return profile
 			}
-			args_len--
 		}
-		rl.Write([]byte("-p not found, setting default(0)\n"))
+		if extract {
+			rl.Write([]byte("-p value not found, setting default(0)\n"))
+		}
 	}
 	return 0
+}
+
+//In case of error it set to the current profile id
+func obtain_profile_id_from_flags(args []string, profile_id int, rl *readline.Instance) int {
+	var val			string
+	var extract		bool
+	var new_id		int
+	var err			error
+
+	extract = false
+	for _, val = range args {
+		if val == "-p" {
+			extract = true
+		} else if extract == true{
+			new_id, err = strconv.Atoi(val)
+			if err != nil {
+				rl.Write([]byte("-p invalid profile, make sure is a int, setting current(" + strconv.Itoa(profile_id) + ")\n"))
+				return profile_id
+			}
+			return new_id
+		}
+	}
+	return profile_id
 }
 
 func extract_args(og_args []string) []string {
 	var args	[]string
 	var val		string
 	var pos		int
+	var skip	bool
 
+	skip = false
 	for pos, val = range og_args {
 		if val == "-p" {
 			pos++
+			skip = true
+		} else if skip {
+			skip = false
 		} else {
 			args = append(args, val)
 		}
