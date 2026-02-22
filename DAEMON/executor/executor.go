@@ -183,10 +183,12 @@ func (e *Executor) Start(id int) (int, error) {
 		}
 		if !e.isExpectedExitCode(task) {
 			task.Status = StatusFailed
+			task.EndTime = time.Now()
 			return -1, err
 		}
 	}
 	task.Status = StatusSuccess
+	task.EndTime = time.Now()
 
 	return id, nil
 }
@@ -245,6 +247,7 @@ func (e *Executor) Stop(id int) (int, error) {
 		return -1, fmt.Errorf("failed to stop task: %w", err)
 	}
 	task.Status = StatusStopped
+	task.EndTime = time.Now()
 
 	return id, nil
 }
@@ -266,6 +269,7 @@ func (e *Executor) Kill(id int) (int, error) {
 		return -1, fmt.Errorf("failed to kill task: %w", err)
 	}
 	task.Status = StatusKilled
+	task.EndTime = time.Now()
 
 	return id, nil
 }
@@ -319,11 +323,26 @@ func (e *Executor) GetTaskInfo(id int) (*TaskInfo, error) {
 		return nil, err
 	}
 
+	var timeRunning string
+	switch task.Status {
+	case StatusPending, StatusNotLaunched:
+		// not started yet — show nothing
+		timeRunning = ""
+	case StatusRunning:
+		// live elapsed since start
+		timeRunning = time.Since(task.StartTime).String()
+	default:
+		// finished (success, failed, stopped, killed) — duration at the moment it ended
+		if !task.StartTime.IsZero() && !task.EndTime.IsZero() {
+			timeRunning = task.EndTime.Sub(task.StartTime).String()
+		}
+	}
+
 	taskInfo := &TaskInfo{
 		TaskID:      task.ID,
 		Name:        task.Name,
 		Status:      task.Status,
-		TimeRunning: time.Since(task.StartTime).String(),
+		TimeRunning: timeRunning,
 	}
 	return taskInfo, nil
 }

@@ -36,7 +36,7 @@ type Status string
 
 const (
 	StatusPending     Status = "pending"
-	StatusNotLaunched Status = "not_launched"
+	StatusNotLaunched Status = "not launched"
 	StatusKilled      Status = "killed"
 	StatusRunning     Status = "running"
 	StatusStopped     Status = "stopped"
@@ -55,6 +55,7 @@ type Task struct {
 	RestartCount      int
 	MaxRestarts       int
 	StartTime         time.Time
+	EndTime           time.Time
 	StdoutWriter      io.Writer
 	StderrWriter      io.Writer
 	Env               []string

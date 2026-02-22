@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/chzyer/readline"
 )
@@ -24,36 +25,34 @@ func get_id(json *map[string]interface{}) int {
 }
 
 func format_duration(s string) string {
-	var h, m, sec int
-	var rest string
-	var n int
+	if s == "" {
+		return "null"
+	}
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return s
+	}
+	totalMs := d.Milliseconds()
+	if totalMs < 1000 {
+		return fmt.Sprintf("%dms", totalMs)
+	}
+	h := int(totalMs / 3600000)
+	m := int((totalMs % 3600000) / 60000)
+	sec := int((totalMs % 60000) / 1000)
+	ms := int(totalMs % 1000)
 
-	rest = s
-	// parse hours
-	if idx := strings.Index(rest, "h"); idx != -1 {
-		fmt.Sscanf(rest[:idx], "%d", &n)
-		h = n
-		rest = rest[idx+1:]
-	}
-	// parse minutes
-	if idx := strings.Index(rest, "m"); idx != -1 {
-		fmt.Sscanf(rest[:idx], "%d", &n)
-		m = n
-		rest = rest[idx+1:]
-	}
-	// parse seconds (drop decimals)
-	if idx := strings.Index(rest, "s"); idx != -1 {
-		var f float64
-		fmt.Sscanf(rest[:idx], "%f", &f)
-		sec = int(f)
-	}
+	var b strings.Builder
 	if h > 0 {
-		return fmt.Sprintf("%dh %dm %ds", h, m, sec)
+		fmt.Fprintf(&b, "%dh %dm %ds", h, m, sec)
+	} else if m > 0 {
+		fmt.Fprintf(&b, "%dm %ds", m, sec)
+	} else {
+		fmt.Fprintf(&b, "%ds", sec)
 	}
-	if m > 0 {
-		return fmt.Sprintf("%dm %ds", m, sec)
+	if ms > 0 {
+		fmt.Fprintf(&b, " %dms", ms)
 	}
-	return fmt.Sprintf("%ds", sec)
+	return b.String()
 }
 
 func enforce_max_size(str string, size int) string {
@@ -305,7 +304,7 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 		name = enforce_max_size(name, 30)
 		status = enforce_max_size(status, 12)
 		ts = enforce_max_size(ts, 21)
-		rl.Write([]byte(fmt.Sprintf("| %-4s | %-30s | %-12s | %-21s |\n", strconv.Itoa(id), name, status, ts)))
+		rl.Write([]byte(fmt.Sprintf("| %-4s | %-30s | %-12s | %21s |\n", strconv.Itoa(id), name, status, ts)))
 	}
 	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------|\n"))
 }
