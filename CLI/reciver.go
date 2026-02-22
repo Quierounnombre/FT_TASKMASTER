@@ -238,9 +238,9 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 	var ts string
 	var obj interface{}
 
-	rl.Write([]byte("+------+------------------+--------------+-----------------------|\n"))
-	rl.Write([]byte("|  ID  | Name             |  Status      | Timestamp             |\n"))
-	rl.Write([]byte("+------+------------------+--------------+-----------------------|\n"))
+	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------|\n"))
+	rl.Write([]byte("|  ID  | Name                           |  Status      | Timestamp             |\n"))
+	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------|\n"))
 	proc_lst, ok = (*json)["procs"].([]interface{})
 	if !ok {
 		proc_lst = nil
@@ -267,12 +267,12 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 		if !ok {
 			ts = "Null"
 		}
-		name = enforce_max_size(name, 16)
+		name = enforce_max_size(name, 30)
 		status = enforce_max_size(status, 12)
 		ts = enforce_max_size(ts, 21)
-		rl.Write([]byte(fmt.Sprintf("| %-4s | %-16s | %-12s | %-21s |\n", strconv.Itoa(id), name, status, ts)))
+		rl.Write([]byte(fmt.Sprintf("| %-4s | %-30s | %-12s | %-21s |\n", strconv.Itoa(id), name, status, ts)))
 	}
-	rl.Write([]byte("+------+------------------+--------------+-----------------------|\n"))
+	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------|\n"))
 }
 
 func recive_kill(json *map[string]interface{}, rl *readline.Instance) {
