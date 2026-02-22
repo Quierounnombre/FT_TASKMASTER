@@ -68,6 +68,17 @@ func (e *Executor) initTask(process Process, nextID *int) {
 		if process.WorkingDir != "" {
 			cmd.Dir = process.WorkingDir
 		}
+		// Initial status
+		var initStatus Status
+		if process.Start_at_launch {
+			if process.Launch_wait > 0 {
+				initStatus = StatusPending
+			} else {
+				initStatus = StatusRunning
+			}
+		} else {
+			initStatus = StatusNotLaunched
+		}
 
 		// Create and store the task
 		task := &Task{
@@ -75,7 +86,7 @@ func (e *Executor) initTask(process Process, nextID *int) {
 			Name:              instanceName,
 			Cmd:               cmd,
 			CmdStr:            process.Cmd,
-			Status:            StatusPending,
+			Status:            initStatus,
 			StdoutWriter:      process.Stdout,
 			StderrWriter:      process.Stderr,
 			Env:               envSlice,
@@ -110,8 +121,16 @@ func (e *Executor) isExpectedExitCode(task *Task) bool {
 	return slices.Contains(task.ExpectedExitCodes, task.ExitCode)
 }
 
-// recreateCmd creates a fresh exec.Cmd from the task's stored configuration.
-// Go's exec.Cmd can only be used once, so this is needed for restarts.
+func (e *Executor) updateTaskStatus(id int, status Status) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	task, err := e.CheckTaskExists(id)
+	if err != nil {
+		return
+	}
+	task.Status = status
+}
+
 func (e *Executor) recreateCmd(task *Task) {
 	cmd := exec.Command("/bin/sh", "-c", task.CmdStr)
 	cmd.Env = task.Env
@@ -162,11 +181,12 @@ func (e *Executor) Start(id int) (int, error) {
 				task.ExitCode = status.ExitStatus()
 			}
 		}
-		task.Status = StatusFailed
-		return -1, err
-	} else {
-		task.Status = StatusSuccess
+		if !e.isExpectedExitCode(task) {
+			task.Status = StatusFailed
+			return -1, err
+		}
 	}
+	task.Status = StatusSuccess
 
 	return id, nil
 }
@@ -224,6 +244,7 @@ func (e *Executor) Stop(id int) (int, error) {
 	if err := task.Cmd.Process.Signal(syscall.SIGTERM); err != nil {
 		return -1, fmt.Errorf("failed to stop task: %w", err)
 	}
+	task.Status = StatusStopped
 
 	return id, nil
 }
@@ -244,13 +265,11 @@ func (e *Executor) Kill(id int) (int, error) {
 	if err := task.Cmd.Process.Kill(); err != nil {
 		return -1, fmt.Errorf("failed to kill task: %w", err)
 	}
+	task.Status = StatusKilled
 
 	return id, nil
 }
 
-// Restart kills the task and sets it to StatusPending.
-// The watcher will detect the pending status and start it asynchronously,
-// avoiding blocking the daemon's main event loop.
 func (e *Executor) Restart(id int) (int, error) {
 	task, err := e.CheckTaskExists(id)
 	if err != nil {

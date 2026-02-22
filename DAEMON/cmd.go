@@ -102,13 +102,9 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			c.send_error(msg, "Stop missing target")
 			return
 		}
-		if c.profile_id == 0 {
-			c.send_error(msg, "Lack connection to profile")
-			return
-		}
 		taskID, _ := strconv.Atoi(c.flags[0])
-		//TODO check if is number?
-		newProfileID, err := manager.Stop(c.profile_id, taskID)
+
+		newProfileID, err := manager.Stop(taskID)
 		if err != nil {
 			c.send_error(msg, err.Error())
 			return
@@ -122,18 +118,14 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			c.send_error(msg, "Start missing target")
 			return
 		}
-		if c.profile_id == 0 {
-			c.send_error(msg, "Lack connection to profile")
-			return
-		}
 		taskID, _ := strconv.Atoi(c.flags[0])
-		newProfileID, err := manager.Start(c.profile_id, taskID)
+		newProfileID, err := manager.Start(taskID)
 		if err != nil {
 			c.send_error(msg, err.Error())
 			return
 		}
 
-		msg.add_payload("cmd", "stop")
+		msg.add_payload("cmd", "start")
 		msg.add_payload("id", newProfileID)
 
 	case "restart":
@@ -142,7 +134,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			return
 		}
 		taskID, _ := strconv.Atoi(c.flags[0])
-		newProfileID, err := manager.Restart(c.profile_id, taskID)
+		newProfileID, err := manager.Restart(taskID)
 		if err != nil {
 			c.send_error(msg, err.Error())
 			return
@@ -156,12 +148,8 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			c.send_error(msg, "Kill missing target")
 			return
 		}
-		if c.profile_id == 0 {
-			c.send_error(msg, "Lack connection to profile")
-			return
-		}
 		taskID, _ := strconv.Atoi(c.flags[0])
-		newProfileID, err := manager.Kill(c.profile_id, taskID)
+		newProfileID, err := manager.Kill(taskID)
 		if err != nil {
 			c.send_error(msg, err.Error())
 			return
@@ -175,12 +163,8 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			c.send_error(msg, "Describe missing target")
 			return
 		}
-		if c.profile_id == 0 {
-			c.send_error(msg, "Lack connection to profile")
-			return
-		}
 		taskID, _ := strconv.Atoi(c.flags[0])
-		taskDetail, err := manager.DescribeTask(c.profile_id, taskID)
+		taskDetail, err := manager.DescribeTask(taskID)
 		if err != nil {
 			c.send_error(msg, err.Error())
 			return
@@ -230,7 +214,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 
 		msg.add_payload("cmd", "ch")
 		msg.add_payload("id", profileID)
-	
+
 	case "russian":
 		if c.profile_id == 0 {
 			c.send_error(msg, "Set a profile first dude")
@@ -243,7 +227,7 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 		}
 		//Fast random
 		for _, task := range tasks {
-			newProfileID, err := manager.Kill(c.profile_id, task.TaskID)
+			newProfileID, err := manager.Kill(task.TaskID)
 			if err != nil {
 				c.send_error(msg, err.Error())
 				return
@@ -251,7 +235,6 @@ func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg)
 			msg.add_payload("cmd", "russian")
 			msg.add_payload("unlucky", newProfileID)
 		}
-
 
 	default:
 		c.send_error(msg, "Da hell is that? "+c.base)

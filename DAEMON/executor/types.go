@@ -36,6 +36,7 @@ type Status string
 
 const (
 	StatusPending     Status = "pending"
+	StatusNotLaunched Status = "NotLaunched"
 	StatusKilled      Status = "killed"
 	StatusRunning     Status = "running"
 	StatusStopped     Status = "stopped"

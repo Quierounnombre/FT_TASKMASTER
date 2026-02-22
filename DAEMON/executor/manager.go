@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -61,6 +60,36 @@ func (m *Manager) CheckProfileExists(profileID int) (*Profile, error) {
 		return nil, fmt.Errorf("profile %d not found", profileID)
 	}
 	return profile, nil
+}
+
+// Search task in all profiles
+func (m *Manager) SearchTask(taskID int) (*Task, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, profile := range m.profiles {
+		profile.executor.mu.RLock()
+		task, exists := profile.executor.tasks[taskID]
+		profile.executor.mu.RUnlock()
+		if exists {
+			return task, nil
+		}
+	}
+	return nil, fmt.Errorf("task %d not found", taskID)
+}
+
+// Search task and give back executor
+func (m *Manager) SearchTaskInExecutor(taskID int) (*Executor, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, profile := range m.profiles {
+		profile.executor.mu.RLock()
+		_, exists := profile.executor.tasks[taskID]
+		profile.executor.mu.RUnlock()
+		if exists {
+			return profile.executor, nil
+		}
+	}
+	return nil, fmt.Errorf("task %d not found", taskID)
 }
 
 // Profile Management
@@ -124,8 +153,7 @@ func (m *Manager) ReloadProfile(config File_Config, profileID int) (int, error) 
 
 	taskIDs := profile.executor.ListTasks()
 	for _, taskID := range taskIDs {
-		//TODO: THIS SHOULD BE KILL????
-		profile.executor.Stop(taskID)
+		profile.executor.Kill(taskID)
 	}
 
 	newExecutor := NewExecutor(&config, &m.nextID)
@@ -190,15 +218,15 @@ func (m *Manager) InfoStatusTasks(profileID int) ([]*TaskInfo, error) {
 	return backInfoStatusTasks, nil
 }
 
-func (m *Manager) DescribeTask(profileID, taskID int) (*TaskDetail, error) {
-	m.logger.Info("Listing status of task " + strconv.Itoa(taskID) + " of profile " + strconv.Itoa(profileID))
-	profile, err := m.CheckProfileExists(profileID)
+func (m *Manager) DescribeTask(taskID int) (*TaskDetail, error) {
+	m.logger.Info("Listing status of task " + strconv.Itoa(taskID))
+	executor, err := m.SearchTaskInExecutor(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: DescribeTask: Profile " + strconv.Itoa(profileID) + " not found")
+		m.logger.Error("Cmd: DescribeTask: " + err.Error())
 		return nil, err
 	}
 
-	backDetail, err := profile.executor.GetTaskDetail(taskID)
+	backDetail, err := executor.GetTaskDetail(taskID)
 	if err != nil {
 		m.logger.Error("Cmd: DescribeTask: " + err.Error())
 		return nil, err
@@ -222,31 +250,27 @@ func (m *Manager) GetStatus(profileID, taskID int) (Status, error) {
 	return backStatus, nil
 }
 
-func (m *Manager) Start(profileID, taskID int) (int, error) {
-	m.logger.Info("Starting task " + strconv.Itoa(taskID) + " of profile " + strconv.Itoa(profileID))
-	profile, err := m.CheckProfileExists(profileID)
-	if err != nil {
-		m.logger.Error("Cmd: Start: Profile " + strconv.Itoa(profileID) + " not found")
-		return -1, err
-	}
+func (m *Manager) Start(taskID int) (int, error) {
+	m.logger.Info("Starting task " + strconv.Itoa(taskID))
 
-	backInt, err := profile.executor.Start(taskID)
+	task, err := m.SearchTask(taskID)
 	if err != nil {
 		m.logger.Error("Cmd: Start: " + err.Error())
 		return -1, err
 	}
-	return backInt, nil
+	task.Status = StatusPending
+	return taskID, nil
 }
 
-func (m *Manager) Stop(profileID, taskID int) (int, error) {
-	m.logger.Info("Stopping task " + strconv.Itoa(taskID) + " of profile " + strconv.Itoa(profileID))
-	profile, err := m.CheckProfileExists(profileID)
+func (m *Manager) Stop(taskID int) (int, error) {
+	m.logger.Info("Stopping task " + strconv.Itoa(taskID))
+	executor, err := m.SearchTaskInExecutor(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: Stop: Profile " + strconv.Itoa(profileID) + " not found")
+		m.logger.Error("Cmd: Stop: " + err.Error())
 		return -1, err
 	}
 
-	backInt, err := profile.executor.Stop(taskID)
+	backInt, err := executor.Stop(taskID)
 	if err != nil {
 		m.logger.Error("Cmd: Stop: " + err.Error())
 		return -1, err
@@ -254,15 +278,15 @@ func (m *Manager) Stop(profileID, taskID int) (int, error) {
 	return backInt, nil
 }
 
-func (m *Manager) Kill(profileID, taskID int) (int, error) {
-	m.logger.Info("Killing task " + strconv.Itoa(taskID) + " of profile " + strconv.Itoa(profileID))
-	profile, err := m.CheckProfileExists(profileID)
+func (m *Manager) Kill(taskID int) (int, error) {
+	m.logger.Info("Killing task " + strconv.Itoa(taskID))
+	executor, err := m.SearchTaskInExecutor(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: Kill: Profile " + strconv.Itoa(profileID) + " not found")
+		m.logger.Error("Cmd: Kill: " + err.Error())
 		return -1, err
 	}
 
-	backInt, err := profile.executor.Kill(taskID)
+	backInt, err := executor.Kill(taskID)
 	if err != nil {
 		m.logger.Error("Cmd: Kill: " + err.Error())
 		return -1, err
@@ -270,17 +294,17 @@ func (m *Manager) Kill(profileID, taskID int) (int, error) {
 	return backInt, nil
 }
 
-func (m *Manager) Restart(profileID, taskID int) (int, error) {
+func (m *Manager) Restart(taskID int) (int, error) {
 	m.logger.Info("Restarting task " + strconv.Itoa(taskID))
-	for _, profile := range m.profiles {
-		if _, err := profile.executor.GetStatus(taskID); err == nil {
-			backInt, err := profile.executor.Restart(taskID)
-			if err != nil {
-				m.logger.Error("Cmd: Restart: " + err.Error())
-				return -1, err
-			}
-			return backInt, nil
-		}
+	executor, err := m.SearchTaskInExecutor(taskID)
+	if err != nil {
+		m.logger.Error("Cmd: Restart: " + err.Error())
+		return -1, err
 	}
-	return -1, errors.New("task not found")
+	backInt, err := executor.Restart(taskID)
+	if err != nil {
+		m.logger.Error("Cmd: Restart: " + err.Error())
+		return -1, err
+	}
+	return backInt, nil
 }

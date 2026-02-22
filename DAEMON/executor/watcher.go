@@ -52,6 +52,10 @@ func (w *Watcher) checkAllProfiles() {
 	}
 }
 
+func (w *Watcher) launchTask(executor *Executor, taskID int) {
+	go executor.Start(taskID)
+}
+
 func (w *Watcher) checkProfile(profile *Profile) {
 	profile.executor.mu.Lock()
 	defer profile.executor.mu.Unlock()
@@ -61,20 +65,16 @@ func (w *Watcher) checkProfile(profile *Profile) {
 			continue
 		}
 		if task.Status == StatusPending {
-			if !task.startAtLaunch {
-				continue
-			}
-			profile.executor.mu.Unlock()
-			w.manager.Start(profile.ID, id)
-			profile.executor.mu.Lock()
+			w.launchTask(profile.executor, id)
 			continue
 		}
 		if task.Status == StatusRunning && task.Cmd.Process != nil {
 			if err := task.Cmd.Process.Signal(syscall.Signal(0)); err != nil {
 				w.handleProcessDeath(task, profile.executor)
 			}
-		} else if task.Status == StatusFailed {
-			w.handleRestart(profile.ID, id, task, profile.executor)
+		}
+		if task.Status == StatusFailed {
+			w.handleRestart(id, task, profile.executor)
 		}
 	}
 }
@@ -93,7 +93,7 @@ func (w *Watcher) handleProcessDeath(task *Task, executor *Executor) {
 	}
 }
 
-func (w *Watcher) handleRestart(profileID, taskID int, task *Task, executor *Executor) {
+func (w *Watcher) handleRestart(taskID int, task *Task, executor *Executor) {
 	policy := task.restartPolicy
 	maxRestarts := task.MaxRestarts
 
@@ -101,7 +101,7 @@ func (w *Watcher) handleRestart(profileID, taskID int, task *Task, executor *Exe
 	switch policy {
 	case "always":
 		shouldRestart = true
-	case "unexpected":
+	case "on_error":
 		shouldRestart = !executor.isExpectedExitCode(task)
 	}
 
@@ -110,9 +110,6 @@ func (w *Watcher) handleRestart(profileID, taskID int, task *Task, executor *Exe
 			time.Sleep(task.launchWait)
 		}
 		task.RestartCount++
-		task.Status = StatusPending
-		executor.mu.Unlock()
-		w.manager.Start(profileID, taskID)
-		executor.mu.Lock()
+		w.launchTask(executor, taskID)
 	}
 }
