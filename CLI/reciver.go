@@ -23,6 +23,39 @@ func get_id(json *map[string]interface{}) int {
 	return id
 }
 
+func format_duration(s string) string {
+	var h, m, sec int
+	var rest string
+	var n int
+
+	rest = s
+	// parse hours
+	if idx := strings.Index(rest, "h"); idx != -1 {
+		fmt.Sscanf(rest[:idx], "%d", &n)
+		h = n
+		rest = rest[idx+1:]
+	}
+	// parse minutes
+	if idx := strings.Index(rest, "m"); idx != -1 {
+		fmt.Sscanf(rest[:idx], "%d", &n)
+		m = n
+		rest = rest[idx+1:]
+	}
+	// parse seconds (drop decimals)
+	if idx := strings.Index(rest, "s"); idx != -1 {
+		var f float64
+		fmt.Sscanf(rest[:idx], "%f", &f)
+		sec = int(f)
+	}
+	if h > 0 {
+		return fmt.Sprintf("%dh %dm %ds", h, m, sec)
+	}
+	if m > 0 {
+		return fmt.Sprintf("%dm %ds", m, sec)
+	}
+	return fmt.Sprintf("%ds", sec)
+}
+
 func enforce_max_size(str string, size int) string {
 	var chars []rune
 	var lenght int
@@ -239,7 +272,7 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 	var obj interface{}
 
 	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------|\n"))
-	rl.Write([]byte("|  ID  | Name                           |  Status      | Timestamp             |\n"))
+	rl.Write([]byte("|  ID  | Name                           |  Status      | Time running          |\n"))
 	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------|\n"))
 	proc_lst, ok = (*json)["procs"].([]interface{})
 	if !ok {
@@ -263,9 +296,11 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 		if !ok {
 			status = "Null"
 		}
-		ts, ok = proc["timestamp"].(string)
+		ts, ok = proc["timeRunning"].(string)
 		if !ok {
 			ts = "Null"
+		} else {
+			ts = format_duration(ts)
 		}
 		name = enforce_max_size(name, 30)
 		status = enforce_max_size(status, 12)
