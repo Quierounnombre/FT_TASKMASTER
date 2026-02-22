@@ -238,9 +238,9 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 	var ts string
 	var obj interface{}
 
-	rl.Write([]byte("+------+------------------+----------+-----------------------|\n"))
-	rl.Write([]byte("|  ID  | Name             |  Status  | Timestamp             |\n"))
-	rl.Write([]byte("+------+------------------+----------+-----------------------|\n"))
+	rl.Write([]byte("+------+------------------+--------------+-----------------------|\n"))
+	rl.Write([]byte("|  ID  | Name             |  Status      | Timestamp             |\n"))
+	rl.Write([]byte("+------+------------------+--------------+-----------------------|\n"))
 	proc_lst, ok = (*json)["procs"].([]interface{})
 	if !ok {
 		proc_lst = nil
@@ -268,11 +268,11 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 			ts = "Null"
 		}
 		name = enforce_max_size(name, 16)
-		status = enforce_max_size(status, 8)
+		status = enforce_max_size(status, 12)
 		ts = enforce_max_size(ts, 21)
-		rl.Write([]byte(fmt.Sprintf("| %-4s | %-16s | %-8s | %-21s |\n", strconv.Itoa(id), name, status, ts)))
+		rl.Write([]byte(fmt.Sprintf("| %-4s | %-16s | %-12s | %-21s |\n", strconv.Itoa(id), name, status, ts)))
 	}
-	rl.Write([]byte("+------+------------------+----------+-----------------------|\n"))
+	rl.Write([]byte("+------+------------------+--------------+-----------------------|\n"))
 }
 
 func recive_kill(json *map[string]interface{}, rl *readline.Instance) {
@@ -299,7 +299,7 @@ func recive_ch(json *map[string]interface{}, rl *readline.Instance, profile_id *
 }
 
 func recive_unload(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
-	var id		int
+	var id int
 
 	id = get_id(json)
 	if id != -1 {
@@ -311,8 +311,8 @@ func recive_unload(json *map[string]interface{}, rl *readline.Instance, profile_
 }
 
 func recive_russian(json *map[string]interface{}, rl *readline.Instance) {
-	var unlucky		string
-	var ok			bool
+	var unlucky string
+	var ok bool
 
 	unlucky, ok = (*json)["unlucky"].(string)
 	if !ok {
