@@ -30,7 +30,7 @@ func send_data(encoder *json.Encoder, cmd *Cmd) {
 	}
 }
 
-func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int) {
+func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int, recived chan struct{}) {
 	var decoder		*json.Decoder
 	var msg			map[string]interface{}
 	var err			error
@@ -47,6 +47,7 @@ func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int) {
 		if (len(os.Args) > start_shell) {
 			os.Exit(0)
 		}
+		recived <- struct{}{}
 	}
 }
 

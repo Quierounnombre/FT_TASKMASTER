@@ -27,23 +27,25 @@ func set_config() *readline.Config {
 
 // Sets up rl library and starts the console
 func console_start(sk net.Conn, encoder *json.Encoder) {
-	var rl *readline.Instance
-	var config_rl *readline.Config
-	var err error
-	var profile_id int
+	var rl				*readline.Instance
+	var config_rl		*readline.Config
+	var err				error
+	var profile_id		int
+	var recived			chan struct{}
 
 	config_rl = set_config()
 	rl, err = readline.NewEx(config_rl)
 	if err != nil {
 		os.Exit(1)
 	}
+	recived = make(chan struct{}, 1)
 	profile_id = set_profile_id(rl)
-	go recive_data(sk, rl, &profile_id)
-	console(rl, encoder, &profile_id)
+	go recive_data(sk, rl, &profile_id, recived)
+	console(rl, encoder, &profile_id, recived)
 }
 
 // Starts the console
-func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
+func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int, recived chan struct{}) {
 	var err error
 	var line string
 	var flags []string
@@ -57,6 +59,7 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 			cmd.Flags = extract_args(os.Args[2:])
 			cmd.Profile_id = obtain_profile_id_from_flags(os.Args[2:], *profile_id, rl)
 			send_data(encoder, &cmd)
+			<-recived
 		}
 	}
 	for true {
@@ -71,6 +74,7 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int) {
 			cmd.Flags = extract_args(flags[1:])
 			cmd.Profile_id = obtain_profile_id_from_flags(flags[1:], *profile_id, rl)
 			send_data(encoder, &cmd)
+			<-recived
 		}
 	}
 }

@@ -27,10 +27,11 @@ SIGHUP para recargar config
 Settear wrapper the cmds
 -p/-profile
 Ordenar id en reciver
+Cmd para matar perfiles
+Evitar sobrecargar el servidor con el CLI
 
 New task from 16/02/2026
 Revisar restart CLI
-Cmd para matar perfiles
 reload missing target error
 
 ----> PABLETO PARTE <----
