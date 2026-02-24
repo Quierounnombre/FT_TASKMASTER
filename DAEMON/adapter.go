@@ -30,7 +30,7 @@ func convertToExecutorConfig(mainConfig File_Config) executor.File_Config {
 		}
 
 		if p.Stdout != "" {
-			mode := os.FileMode(0666 & ^p.Umask)
+			mode := os.FileMode(0666 & ^*p.Umask)
 			fmt.Println("CHECA ESTO -->>> p.Umask = ", p.Umask, " / mode = ", mode)
 			if f, err := os.OpenFile(p.Stdout, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode); err == nil {
 				f.Chmod(mode)
@@ -45,7 +45,7 @@ func convertToExecutorConfig(mainConfig File_Config) executor.File_Config {
 		}
 
 		if p.Stderr != "" {
-			mode := os.FileMode(0666 & ^p.Umask)
+			mode := os.FileMode(0666 & ^*p.Umask)
 			if f, err := os.OpenFile(p.Stderr, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode); err == nil {
 				f.Chmod(mode)
 				fmt.Println("Stderr file opened: ", f.Name())
