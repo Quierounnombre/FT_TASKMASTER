@@ -25,7 +25,7 @@ func convertToExecutorConfig(mainConfig File_Config) executor.File_Config {
 			Launch_wait:       p.Launch_wait,
 			Kill_wait:         p.Kill_wait,
 			Start_at_launch:   p.Start_at_launch,
-			Umask:             p.Umask,
+			Umask:             *p.Umask,
 			Num_procs:         p.Num_procs,
 		}
 

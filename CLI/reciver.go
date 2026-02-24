@@ -202,7 +202,7 @@ func recive_describe(json *map[string]interface{}, rl *readline.Instance) {
 		} else if key =="umask" {
 			tmp = task[key].(float64)
 			i = int(tmp)
-			b.WriteString(fmt.Sprintf("%-17s: 0%d\n", label, i))
+			b.WriteString(fmt.Sprintf("%-17s: %04d\n", label, i))
 		} else {
 			add(label, key)
 		}

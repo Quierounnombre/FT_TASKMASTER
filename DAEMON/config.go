@@ -25,7 +25,7 @@ type Process struct {
 	Launch_wait     time.Duration     `yaml:"launch_wait"`     //Time until program launch is consider succesfull
 	Kill_wait       time.Duration     `yaml:"kill_wait"`       //Waittime for killing the program
 	Start_at_launch bool              `yaml:"start_at_launch"` //Start this program at launch or not
-	Umask           int               `yaml:"umask"`           //Umask to restrict permissions
+	Umask           *int              `yaml:"umask"`           //Umask to restrict permissions
 	Num_procs       int               `yaml:"num_procs"`       //Number of this process to launch
 }
 
@@ -77,8 +77,9 @@ func set_config_defaults(config *File_Config) {
 		if p.Restart == "" {
 			p.Restart = "never"
 		}
-		if p.Umask == 0 {
-			p.Umask = 644 // Default umask: owner rwx, group/others r-x
+		if p.Umask == nil {
+			defaultUmask := 22
+			p.Umask = &defaultUmask // Default umask: owner rwx, group/others r-x
 		}
 		if p.Num_procs <= 0 {
 			p.Num_procs = 1
