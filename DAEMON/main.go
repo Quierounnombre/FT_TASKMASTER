@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"taskmaster-daemon/executor"
 )
@@ -17,12 +16,6 @@ func main() {
 	//PrintConfigStruct(*config)
 
 	loop(&sock_config)
-}
-
-func PrintMap(m map[string]interface{}) {
-	for k, v := range m {
-		fmt.Printf("%s: [%v]\n", k, v)
-	}
 }
 
 /*
@@ -42,7 +35,6 @@ func loop(sock_config *Sock_Config) {
 			handle_signals(signal, file_config, manager)
 		case msg = <-sock_config.cli_ch:
 			cmd.empty_cmd()
-			PrintMap(msg.content)
 			cmd.Parse_cmd(&msg)
 			cmd.Execute(file_config, manager, &msg)
 			msg.reply()
