@@ -36,9 +36,12 @@ reload missing target error
 
 ----> PABLETO PARTE <----
 TODO:
-- limpiar logs de desarrollo
-- meter logs de disconnected
 - meter logs al watcher
+- reload no borra procesos que no han sido tocados
+- Loggear disconnected y connected
+- ls has the option to pass the profile by flag to list any profile
+- Whether the program should be restarted always, never, or on unexpected exits only
+- signal to stop the program
 
 Old status:
 Hasta ahora lo que hemos hecho son un manager que tiene profiles (cada archivo de configuracion)
