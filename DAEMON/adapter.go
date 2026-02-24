@@ -7,7 +7,7 @@ import (
 	"taskmaster-daemon/executor"
 )
 
-func convertToExecutorConfig(mainConfig File_Config) executor.File_Config {
+func convertToExecutorConfig(mainConfig File_Config, logger *executor.Logger) executor.File_Config {
 	execConfig := executor.File_Config{
 		Path: mainConfig.Path,
 	}
@@ -30,14 +30,13 @@ func convertToExecutorConfig(mainConfig File_Config) executor.File_Config {
 		}
 
 		if p.Stdout != "" {
-			mode := os.FileMode(0666 & *p.Umask)
-			fmt.Println("CHECA ESTO -->>> p.Umask = ", p.Umask, " / mode = ", mode)
+			mode := os.FileMode(0666 & ^*p.Umask)
 			if f, err := os.OpenFile(p.Stdout, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode); err == nil {
 				f.Chmod(mode)
-				fmt.Println("Stdout file opened: ", f.Name())
+				fmt.Println("> Stdout file opened for ", p.Name, " : ", p.Stdout)
+				logger.Info("[" + p.Name + "] stdout → file: " + f.Name() + fmt.Sprintf(" (mode %04o)", mode))
 				execProcess.Stdout = f
 			} else {
-				fmt.Println("Error opening stdout: ", err)
 				execProcess.Stdout = io.Discard
 			}
 		} else {
@@ -48,10 +47,10 @@ func convertToExecutorConfig(mainConfig File_Config) executor.File_Config {
 			mode := os.FileMode(0666 & *p.Umask)
 			if f, err := os.OpenFile(p.Stderr, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode); err == nil {
 				f.Chmod(mode)
-				fmt.Println("Stderr file opened: ", f.Name())
+				fmt.Println("> Stderr file opened for ", p.Name, " : ", p.Stderr)
+				logger.Info("[" + p.Name + "] stderr → file: " + f.Name() + fmt.Sprintf(" (mode %04o)", mode))
 				execProcess.Stderr = f
 			} else {
-				fmt.Println("Error opening stderr: ", err)
 				execProcess.Stderr = io.Discard
 			}
 		} else {

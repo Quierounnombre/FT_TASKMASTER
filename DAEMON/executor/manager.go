@@ -34,6 +34,10 @@ func NewManager() *Manager {
 	return m
 }
 
+func (m *Manager) Logger() *Logger {
+	return m.logger
+}
+
 func (m *Manager) Shutdown() {
 	m.logger.Info("Shutting down manager")
 	if m.watcher != nil {
