@@ -30,8 +30,10 @@ func convertToExecutorConfig(mainConfig File_Config) executor.File_Config {
 		}
 
 		if p.Stdout != "" {
-			// Use O_TRUNC to clear file on each run, or use O_APPEND to keep appending
-			if f, err := os.OpenFile(p.Stdout, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644); err == nil {
+			mode := os.FileMode(0666 & ^p.Umask)
+			fmt.Println("CHECA ESTO -->>> p.Umask = ", p.Umask, " / mode = ", mode)
+			if f, err := os.OpenFile(p.Stdout, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode); err == nil {
+				f.Chmod(mode)
 				fmt.Println("Stdout file opened: ", f.Name())
 				execProcess.Stdout = f
 			} else {
@@ -39,13 +41,13 @@ func convertToExecutorConfig(mainConfig File_Config) executor.File_Config {
 				execProcess.Stdout = io.Discard
 			}
 		} else {
-			fmt.Println("No stdout specified")
 			execProcess.Stdout = io.Discard
 		}
 
 		if p.Stderr != "" {
-			// Use O_TRUNC to clear file on each run, or use O_APPEND to keep appending
-			if f, err := os.OpenFile(p.Stderr, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644); err == nil {
+			mode := os.FileMode(0666 & ^p.Umask)
+			if f, err := os.OpenFile(p.Stderr, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode); err == nil {
+				f.Chmod(mode)
 				fmt.Println("Stderr file opened: ", f.Name())
 				execProcess.Stderr = f
 			} else {

@@ -134,7 +134,7 @@ func PrintProcesStruct(p Process) {
 	fmt.Printf("Launch Wait:      %s\n", p.Launch_wait)
 	fmt.Printf("Kill Wait:        %s\n", p.Kill_wait)
 	fmt.Printf("Start at Launch:  %t\n", p.Start_at_launch)
-	fmt.Printf("Umask:             %d\n", p.Umask)
+	fmt.Printf("Umask:            %03o\n", p.Umask)
 	fmt.Printf("Num_process:      %d\n", p.Num_procs)
 	fmt.Println("============================")
 }
