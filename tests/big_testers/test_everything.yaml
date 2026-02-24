@@ -47,7 +47,7 @@ process:
     launch_wait: 1s
     kill_wait: 2s
     start_at_launch: true
-    umask: 0022
+    umask: 22
     num_procs: 1
 
   # ── 2. ALWAYS RESTART with crash loop ──────────────────────────────────────
@@ -69,7 +69,7 @@ process:
     launch_wait: 1s
     kill_wait: 3s
     start_at_launch: true
-    umask: 0077
+    umask: 77
     num_procs: 1
 
   # ── 3. ON_ERROR RESTART with expected exit ─────────────────────────────────
@@ -90,7 +90,7 @@ process:
     launch_wait: 1s
     kill_wait: 2s
     start_at_launch: true
-    umask: 0022
+    umask: 22
     num_procs: 1
 
   # ── 4. ON_ERROR RESTART with unexpected exit ───────────────────────────────
@@ -110,7 +110,7 @@ process:
     launch_wait: 1s
     kill_wait: 2s
     start_at_launch: true
-    umask: 0022
+    umask: 22
     num_procs: 1
 
   # ── 5. LONG RUNNING with signal handling + multiple instances ──────────────
@@ -131,7 +131,7 @@ process:
     launch_wait: 1s
     kill_wait: 5s
     start_at_launch: true
-    umask: 0022
+    umask: 22
     num_procs: 2
 
   # ── 6. ENV VARS + STDOUT + WORKDIR combined ────────────────────────────────
@@ -156,7 +156,7 @@ process:
     launch_wait: 1s
     kill_wait: 2s
     start_at_launch: true
-    umask: 0022
+    umask: 22
     num_procs: 1
 
   # ── 7. MANUAL START (start_at_launch: false) ───────────────────────────────
@@ -176,7 +176,7 @@ process:
     launch_wait: 2s
     kill_wait: 3s
     start_at_launch: false
-    umask: 0022
+    umask: 22
     num_procs: 1
 
   # ── 8. UMASK + WORKDIR check ───────────────────────────────────────────────
@@ -196,7 +196,7 @@ process:
     launch_wait: 1s
     kill_wait: 2s
     start_at_launch: true
-    umask: 0077
+    umask: 77
     num_procs: 1
 
   # ── 9. WORKDIR verification ────────────────────────────────────────────────
@@ -216,7 +216,7 @@ process:
     launch_wait: 1s
     kill_wait: 2s
     start_at_launch: true
-    umask: 0022
+    umask: 22
     num_procs: 1
 
   # ── 10. STRESS: Multiple fast-cycling tasks ────────────────────────────────
@@ -236,7 +236,7 @@ process:
     launch_wait: 1s
     kill_wait: 2s
     start_at_launch: true
-    umask: 0022
+    umask: 22
     num_procs: 3
 
   # ── 11. RANDOM FAIL with output + restarts ─────────────────────────────────
@@ -257,7 +257,7 @@ process:
     launch_wait: 1s
     kill_wait: 3s
     start_at_launch: true
-    umask: 0022
+    umask: 22
     num_procs: 1
 
   # ── 12. SLOW STARTER with launch_wait ──────────────────────────────────────
@@ -277,5 +277,5 @@ process:
     launch_wait: 2s
     kill_wait: 3s
     start_at_launch: true
-    umask: 0022
+    umask: 22
     num_procs: 1

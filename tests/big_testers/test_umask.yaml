@@ -6,14 +6,14 @@ process:
     cmd: /app/tests/scripts/check_umask.sh
     restart: never
     start_at_launch: true
-    umask: 0077
+    umask: 77
     stdout: /tmp/test_umask_restrictive.log
 
   - name: umask-permissive
     cmd: /app/tests/scripts/check_umask.sh
     restart: never
     start_at_launch: true
-    umask: 0000
+    umask: 0
     stdout: /tmp/test_umask_permissive.log
 
   - name: umask-default
