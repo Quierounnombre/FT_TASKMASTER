@@ -366,8 +366,6 @@ func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *in
 	var cmd string
 
 	cmd, ok = (*json)["cmd"].(string)
-	fmt.Println("CMD: ", cmd)
-	fmt.Println("JSON: ", json)
 	if !ok {
 		rl.Write([]byte("ERROR CMD NOT FOUND"))
 		return

@@ -56,12 +56,3 @@ func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int) {
 		os.Exit(0)
 	}
 }
-
-func PrintMapRL(m map[string]interface{}, rl *readline.Instance) {
-    b, err := json.MarshalIndent(m, "", "  ")
-    if err != nil {
-        rl.Write([]byte("Error marshaling map: " + err.Error() + "\n"))
-        return
-    }
-    rl.Write(append(b, '\n'))
-}
