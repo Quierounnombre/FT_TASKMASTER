@@ -168,7 +168,7 @@ func cmd_help() string {
 	var str string
 
 	str = string(str + bold + "load" + reset + "	{PATH}		Load a taskmaster.yaml in the provided path\n")
-	str = string(str + bold + "reload" + reset + "	(ID)		Reload the configuration file with the given task id\n")
+	str = string(str + bold + "reload" + reset + "	{ID}		Reload the configuration file with the given task id\n")
 	str = string(str + bold + "stop" + reset + "	{TARGET}	Stop the target process\n")
 	str = string(str + bold + "start" + reset + "	{TARGET}	Start the target process\n")
 	str = string(str + bold + "restart" + reset + "	{TARGET}	Restart the target process\n")
