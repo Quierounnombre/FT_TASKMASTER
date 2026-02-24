@@ -7,3 +7,6 @@ ft_taskmaster
 DAEMON/DAEMON
 CLI/CLI
 DAEMON/taskmaster-daemon
+
+#Logs
+*.txt

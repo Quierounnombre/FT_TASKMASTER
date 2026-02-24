@@ -18,7 +18,7 @@ process:
     cmd: /app/tests/scripts/long_running.sh
     restart: never
     start_at_launch: true
-    umask: 0644
+    umask: 66
     env:
       HEARTBEAT_INTERVAL: "1"
       CUSTOM_MSG: "env-test-running"

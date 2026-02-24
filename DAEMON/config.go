@@ -78,7 +78,7 @@ func set_config_defaults(config *File_Config) {
 			p.Restart = "never"
 		}
 		if p.Umask == 0 {
-			p.Umask = 0022 // Default umask: owner rwx, group/others r-x
+			p.Umask = 644 // Default umask: owner rwx, group/others r-x
 		}
 		if p.Num_procs <= 0 {
 			p.Num_procs = 1
