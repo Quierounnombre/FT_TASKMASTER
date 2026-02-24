@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/chzyer/readline"
 	"encoding/json"
+	"time"
 )
 
 func open_socket(socket_path string) net.Conn {
@@ -30,24 +31,29 @@ func send_data(encoder *json.Encoder, cmd *Cmd) {
 	}
 }
 
-func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int, recived chan struct{}) {
+func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int) {
 	var decoder		*json.Decoder
 	var msg			map[string]interface{}
 	var err			error
+	var ne			net.Error
+	var ok			bool
 
+	sk.SetReadDeadline(time.Now().Add(15 * time.Second))
 	decoder = json.NewDecoder(sk)
-	for (true) {
-		err = decoder.Decode(&msg)
-		if (err != nil) {
-			fmt.Println("ERROR_RECIVING_DATA")
-			break
+	err = decoder.Decode(&msg)
+	if err != nil {
+		ne, ok = err.(net.Error)
+		if ok && ne.Timeout() {
+			rl.Write([]byte("Timeout\n"))
+			return
 		}
-		reciver(&msg, rl, profile_id)
-		rl.Refresh()
-		if (len(os.Args) > start_shell) {
-			os.Exit(0)
-		}
-		recived <- struct{}{}
+		rl.Write([]byte("ERROR RECIVING DATA\n"))
+		return
+	}
+	reciver(&msg, rl, profile_id)
+	rl.Refresh()
+	if (len(os.Args) > start_shell) {
+		os.Exit(0)
 	}
 }
 

@@ -141,16 +141,17 @@ func recive_restart(json *map[string]interface{}, rl *readline.Instance) {
 }
 
 func recive_describe(json *map[string]interface{}, rl *readline.Instance) {
-	var task map[string]interface{}
-	var ok bool
-	var fields []string
-	var add func(string, string)
-	var b strings.Builder
-	var key string
-	var label string
-	var i int
-	var value interface{}
-	var env []interface{}
+	var task		map[string]interface{}
+	var ok			bool
+	var fields		[]string
+	var add			func(string, string)
+	var b			strings.Builder
+	var key			string
+	var label		string
+	var i			int
+	var tmp			float64
+	var value		interface{}
+	var env			[]interface{}
 
 	// The daemon wraps task info under a "task" key
 	task, ok = (*json)["task"].(map[string]interface{})
@@ -198,6 +199,10 @@ func recive_describe(json *map[string]interface{}, rl *readline.Instance) {
 			if len(env) == 0 {
 				b.WriteString(fmt.Sprintf("%-17s:\n", label))
 			}
+		} else if key =="umask" {
+			tmp = task[key].(float64)
+			i = int(tmp)
+			b.WriteString(fmt.Sprintf("%-17s: %04o\n", label, i))
 		} else {
 			add(label, key)
 		}

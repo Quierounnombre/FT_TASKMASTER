@@ -31,21 +31,18 @@ func console_start(sk net.Conn, encoder *json.Encoder) {
 	var config_rl		*readline.Config
 	var err				error
 	var profile_id		int
-	var recived			chan struct{}
 
 	config_rl = set_config()
 	rl, err = readline.NewEx(config_rl)
 	if err != nil {
 		os.Exit(1)
 	}
-	recived = make(chan struct{}, 1)
 	profile_id = set_profile_id(rl)
-	go recive_data(sk, rl, &profile_id, recived)
-	console(rl, encoder, &profile_id, recived)
+	console(rl, encoder, &profile_id, sk)
 }
 
 // Starts the console
-func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int, recived chan struct{}) {
+func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int, sk net.Conn) {
 	var err error
 	var line string
 	var flags []string
@@ -59,7 +56,7 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int, reci
 			cmd.Flags = extract_args(os.Args[2:])
 			cmd.Profile_id = obtain_profile_id_from_flags(os.Args[2:], *profile_id, rl)
 			send_data(encoder, &cmd)
-			<-recived
+			recive_data(sk, rl, profile_id)
 		}
 	}
 	for true {
@@ -74,7 +71,7 @@ func console(rl *readline.Instance, encoder *json.Encoder, profile_id *int, reci
 			cmd.Flags = extract_args(flags[1:])
 			cmd.Profile_id = obtain_profile_id_from_flags(flags[1:], *profile_id, rl)
 			send_data(encoder, &cmd)
-			<-recived
+			recive_data(sk, rl, profile_id)
 		}
 	}
 }
@@ -178,14 +175,14 @@ func cmd_help() string {
 	str = string(str + bold + "describe" + reset + "{TARGET}	Describe the target process\n")
 	str = string(str + bold + "kill" + reset + "	{TARGET}	Kill the indicated process\n")
 	str = string(str + bold + "erase" + reset + "	{TARGET}	Erase the indicated process\n")
-	str = string(str + bold + "russian" + reset + "				Russian roulet for your process\n")
-	str = string(str + bold + "ps" + reset + "					List all the profiles and show their task id, within a profile id\n")
-	str = string(str + bold + "ls" + reset + "		(ID)		List all the process within a profile id\n")
-	str = string(str + bold + "ch" + reset + "		{ID}		Modify the working profile id\n")
-	str = string(str + bold + "wichid" + reset + "				Print the current profile id in console\n")
-	str = string(str + bold + "help" + reset + "				Show this info\n")
-	str = string(str + bold + "-p" + reset + "					Set the profile id to the indicated number\n")
-	str = string(str + "\n Information in {} is a MUST and can't be skipped\n")
+	str = string(str + bold + "russian" + reset + "			Russian roulet for your process\n")
+	str = string(str + bold + "ps" + reset + "			List all the profiles and show their task id, within a profile id\n")
+	str = string(str + bold + "ls" + reset + "	(ID)		List all the process within a profile id\n")
+	str = string(str + bold + "ch" + reset + "	{ID}		Modify the working profile id\n")
+	str = string(str + bold + "wichid" + reset + "			Print the current profile id in console\n")
+	str = string(str + bold + "help" + reset + "			Show this info\n")
+	str = string(str + bold + "-p" + reset + "			Set the profile id to the indicated number\n")
+	str = string(str + "\nInformation in {} is a MUST and can't be skipped\n")
 	str = string(str + "Information in () is a OPTIONAL and the id is the current id\n")
 	str = string(str + "Current id is the the one modify by loading a configuration, using -p, or ch\n")
 	return (str)
