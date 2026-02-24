@@ -81,6 +81,14 @@ func set_config_defaults(config *File_Config) {
 			defaultUmask := 22
 			p.Umask = &defaultUmask // Default umask: owner rwx, group/others r-x
 		}
+		if *p.Umask >= 777 {
+			defaultUmask := 22
+			p.Umask = &defaultUmask // Default umask: owner rwx, group/others r-x
+		}
+		if *p.Umask <= -1 {
+			defaultUmask := 22
+			p.Umask = &defaultUmask // Default umask: owner rwx, group/others r-x
+		}
 		if p.Num_procs <= 0 {
 			p.Num_procs = 1
 		}
