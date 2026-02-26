@@ -252,16 +252,12 @@ func (m *Manager) Start(taskID int) (int, error) {
 }
 
 func (m *Manager) Stop(taskID int) (int, error) {
-	executor, err := m.SearchTaskInExecutor(taskID)
+	task, err := m.SearchTask(taskID)
 	if err != nil {
 		return -1, err
 	}
-
-	backInt, err := executor.Stop(taskID)
-	if err != nil {
-		return -1, err
-	}
-	return backInt, nil
+	task.Status = StatusStopping
+	return taskID, nil
 }
 
 func (m *Manager) Kill(taskID int) (int, error) {

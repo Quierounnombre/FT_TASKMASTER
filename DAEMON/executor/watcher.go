@@ -81,6 +81,28 @@ func (w *Watcher) checkProfile(profile *Profile) {
 			w.handleRestart(id, task, profile.executor)
 			w.manager.Logger().Info("Task " + strconv.Itoa(id) + " restarted")
 		}
+		if task.Status == StatusStopping {
+			go w.handleStop(task, profile.executor)
+			w.manager.Logger().Info("Task " + strconv.Itoa(id) + " stopping")
+		}
+	}
+}
+
+func (w *Watcher) handleStop(task *Task, executor *Executor) {
+	go executor.Stop(task.ID)
+	task.StartTime = time.Now()
+	// count time to kill
+	for {
+		if task.Status == StatusStopped {
+			w.manager.Logger().Info("Task " + strconv.Itoa(task.ID) + " stopped successfully")
+			break
+		}
+		// kill if time is up
+		if time.Since(task.StartTime) > task.Kill_wait {
+			executor.Kill(task.ID)
+			w.manager.Logger().Info("Task " + strconv.Itoa(task.ID) + " killed due to timeout")
+		}
+		time.Sleep(1 * time.Second)
 	}
 }
 

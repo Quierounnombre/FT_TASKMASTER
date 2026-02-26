@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"syscall"
 	"taskmaster-daemon/executor"
 )
 
@@ -13,14 +15,18 @@ func convertToExecutorConfig(mainConfig File_Config, logger *executor.Logger) ex
 	}
 
 	for _, p := range mainConfig.Process {
+		signal, err := strconv.Atoi(p.Stop_signal)
+		if err != nil {
+			signal = int(syscall.SIGTERM)
+		}
 		execProcess := executor.Process{
 			Name:              p.Name,
 			Cmd:               p.Cmd,
 			Restart:           p.Restart,
-			Stop_signal:       p.Stop_signal,
+			Restart_atempts:   p.Restart_atempts,
+			Stop_signal:       signal,
 			WorkingDir:        p.Work_dir,
 			Env:               p.Env,
-			Restart_atempts:   p.Restart_atempts,
 			ExpectedExitCodes: p.Expected_exit,
 			Launch_wait:       p.Launch_wait,
 			Kill_wait:         p.Kill_wait,

@@ -89,6 +89,7 @@ func (e *Executor) initTask(process Process, nextID *int) {
 			Status:            initStatus,
 			StdoutWriter:      process.Stdout,
 			StderrWriter:      process.Stderr,
+			Stop_signal:       process.Stop_signal,
 			Env:               envSlice,
 			WorkingDir:        process.WorkingDir,
 			ExpectedExitCodes: process.ExpectedExitCodes,
@@ -187,7 +188,7 @@ func (e *Executor) Start(id int) (int, error) {
 			return -1, err
 		}
 	}
-	task.Status = StatusSuccess
+
 	task.EndTime = time.Now()
 
 	return id, nil
@@ -243,7 +244,7 @@ func (e *Executor) Stop(id int) (int, error) {
 		return -1, fmt.Errorf("task %d is not running", id)
 	}
 
-	if err := task.Cmd.Process.Signal(syscall.SIGTERM); err != nil {
+	if err := task.Cmd.Process.Signal(syscall.Signal(task.Stop_signal)); err != nil {
 		return -1, fmt.Errorf("failed to stop task: %w", err)
 	}
 	task.Status = StatusStopped

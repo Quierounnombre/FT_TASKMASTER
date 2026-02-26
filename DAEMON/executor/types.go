@@ -12,12 +12,12 @@ type Process struct {
 	Name              string
 	Cmd               string
 	Restart           string
-	Stop_signal       string
+	Stop_signal       int
+	Restart_atempts   int
 	WorkingDir        string
 	Stdout            io.Writer
 	Stderr            io.Writer
 	Env               map[string]string
-	Restart_atempts   int
 	ExpectedExitCodes []int
 	Launch_wait       time.Duration
 	Kill_wait         time.Duration
@@ -39,6 +39,7 @@ const (
 	StatusNotLaunched Status = "not launched"
 	StatusKilled      Status = "killed"
 	StatusRunning     Status = "running"
+	StatusStopping    Status = "stopping"
 	StatusStopped     Status = "stopped"
 	StatusFailed      Status = "failed"
 	StatusSuccess     Status = "success"
@@ -58,6 +59,8 @@ type Task struct {
 	EndTime           time.Time
 	StdoutWriter      io.Writer
 	StderrWriter      io.Writer
+	Stop_signal       int
+	Kill_wait         time.Duration
 	Env               []string
 	WorkingDir        string
 	ExpectedExitCodes []int
