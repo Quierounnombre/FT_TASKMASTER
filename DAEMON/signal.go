@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"taskmaster-daemon/executor"
 )
 
 /*
@@ -19,8 +18,7 @@ func set_channel_for_signals() chan os.Signal {
 	return (channel)
 }
 
-//SHOULD WE DO A RELOAD OF EVERY PROFILE?
-func handle_signals(sig os.Signal, config []File_Config, manager *executor.Manager) {
+func handle_signals(sig os.Signal) {
 	switch sig {
 	case syscall.SIGHUP:
 		var cmd Cmd

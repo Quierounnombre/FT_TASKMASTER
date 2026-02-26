@@ -22,7 +22,6 @@ func main() {
 Main loop with signal support
 */
 func loop(sock_config *Sock_Config) {
-	var file_config []File_Config
 	var signal os.Signal
 	var manager *executor.Manager
 	var msg Msg
@@ -32,11 +31,11 @@ func loop(sock_config *Sock_Config) {
 	for true {
 		select {
 		case signal = <-sock_config.sig_ch:
-			handle_signals(signal, file_config, manager)
+			handle_signals(signal)
 		case msg = <-sock_config.cli_ch:
 			cmd.empty_cmd()
 			cmd.Parse_cmd(&msg)
-			cmd.Execute(file_config, manager, &msg)
+			cmd.Execute(manager, &msg)
 			msg.reply()
 			//broadcast_data(sock_config.cons, msg)
 		default:

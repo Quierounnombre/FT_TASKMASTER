@@ -29,7 +29,7 @@ func (c *Cmd) send_error(msg *Msg, errorStr string, logger *executor.Logger) {
 }
 
 // Execute commands
-func (c *Cmd) Execute(config []File_Config, manager *executor.Manager, msg *Msg) {
+func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 	manager.Logger().Info(fmt.Sprintf("Request %s | flags: %v | profile_id: %d", c.base, c.flags, c.profile_id))
 	switch c.base {
 	case "load":
