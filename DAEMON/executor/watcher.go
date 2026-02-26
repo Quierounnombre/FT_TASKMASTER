@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -19,10 +20,12 @@ func NewWatcher(manager *Manager) *Watcher {
 
 func (w *Watcher) Start() {
 	go w.watch()
+	w.manager.Logger().Info("Watcher started")
 }
 
 func (w *Watcher) Stop() {
 	close(w.stopChan)
+	w.manager.Logger().Info("Watcher stopped")
 }
 
 func (w *Watcher) watch() {
@@ -66,6 +69,7 @@ func (w *Watcher) checkProfile(profile *Profile) {
 		}
 		if task.Status == StatusPending {
 			w.launchTask(profile.executor, id)
+			w.manager.Logger().Info("Task " + strconv.Itoa(id) + " started")
 			continue
 		}
 		if task.Status == StatusRunning && task.Cmd.Process != nil {
@@ -75,6 +79,7 @@ func (w *Watcher) checkProfile(profile *Profile) {
 		}
 		if task.Status == StatusFailed {
 			w.handleRestart(id, task, profile.executor)
+			w.manager.Logger().Info("Task " + strconv.Itoa(id) + " restarted")
 		}
 	}
 }
@@ -86,10 +91,13 @@ func (w *Watcher) handleProcessDeath(task *Task, executor *Executor) {
 		}
 	}
 
+	id := task.ID
 	if executor.isExpectedExitCode(task) {
-		task.Status = StatusStopped
+		task.Status = StatusSuccess
+		w.manager.Logger().Info("Task " + strconv.Itoa(id) + " finished successfully")
 	} else {
 		task.Status = StatusFailed
+		w.manager.Logger().Info("Task " + strconv.Itoa(id) + " finished with error")
 	}
 }
 
@@ -97,6 +105,9 @@ func (w *Watcher) handleRestart(taskID int, task *Task, executor *Executor) {
 	policy := task.restartPolicy
 	maxRestarts := task.MaxRestarts
 
+	// With never the task will not be restarted
+	// With on_error the task will be restarted if it exited with an error
+	// With always the task will be restarted always
 	shouldRestart := false
 	switch policy {
 	case "always":
@@ -111,5 +122,6 @@ func (w *Watcher) handleRestart(taskID int, task *Task, executor *Executor) {
 		}
 		task.RestartCount++
 		w.launchTask(executor, taskID)
+		w.manager.Logger().Info("Task " + strconv.Itoa(taskID) + " restarted " + strconv.Itoa(task.RestartCount) + " times")
 	}
 }

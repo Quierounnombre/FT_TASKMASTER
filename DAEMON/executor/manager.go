@@ -170,7 +170,6 @@ func (m *Manager) ReloadProfile(config File_Config, profileID int) (int, error) 
 }
 
 func (m *Manager) ListProfiles() []ListProfiles {
-	m.logger.Info("Request: List profiles")
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -187,16 +186,14 @@ func (m *Manager) ListProfiles() []ListProfiles {
 	slices.SortFunc(profileIDs, func(a, b ListProfiles) int {
 		return a.ProfileID - b.ProfileID
 	})
-	fmt.Println("Profile IDs: ", profileIDs)
+	// fmt.Println("Profile IDs: ", profileIDs)
 	return profileIDs
 }
 
 // Task Management
 func (m *Manager) ListTasks(profileID int) ([]int, error) {
-	m.logger.Info("Listing tasks of profile " + strconv.Itoa(profileID))
 	profile, err := m.CheckProfileExists(profileID)
 	if err != nil {
-		m.logger.Error("Cmd: ListTasks: Profile " + strconv.Itoa(profileID) + " not found")
 		return nil, err
 	}
 
@@ -204,16 +201,13 @@ func (m *Manager) ListTasks(profileID int) ([]int, error) {
 }
 
 func (m *Manager) InfoStatusTasks(profileID int) ([]*TaskInfo, error) {
-	m.logger.Info("Listing status of tasks of profile " + strconv.Itoa(profileID))
 	profile, err := m.CheckProfileExists(profileID)
 	if err != nil {
-		m.logger.Error("Cmd: InfoStatusTasks: Profile " + strconv.Itoa(profileID) + " not found")
 		return nil, err
 	}
 
 	backInfoStatusTasks, err := profile.executor.InfoStatusTasks()
 	if err != nil {
-		m.logger.Error("Cmd: InfoStatusTasks: " + err.Error())
 		return nil, err
 	}
 	slices.SortFunc(backInfoStatusTasks, func(a, b *TaskInfo) int {
@@ -223,43 +217,34 @@ func (m *Manager) InfoStatusTasks(profileID int) ([]*TaskInfo, error) {
 }
 
 func (m *Manager) DescribeTask(taskID int) (*TaskDetail, error) {
-	m.logger.Info("Listing status of task " + strconv.Itoa(taskID))
 	executor, err := m.SearchTaskInExecutor(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: DescribeTask: " + err.Error())
 		return nil, err
 	}
 
 	backDetail, err := executor.GetTaskDetail(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: DescribeTask: " + err.Error())
 		return nil, err
 	}
 	return backDetail, nil
 }
 
 func (m *Manager) GetStatus(profileID, taskID int) (Status, error) {
-	m.logger.Info("Listing status of task " + strconv.Itoa(taskID) + " of profile " + strconv.Itoa(profileID))
 	profile, err := m.CheckProfileExists(profileID)
 	if err != nil {
-		m.logger.Error("Cmd: GetStatus: Profile " + strconv.Itoa(profileID) + " not found")
 		return "", err
 	}
 
 	backStatus, err := profile.executor.GetStatus(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: GetStatus: " + err.Error())
 		return "", err
 	}
 	return backStatus, nil
 }
 
 func (m *Manager) Start(taskID int) (int, error) {
-	m.logger.Info("Starting task " + strconv.Itoa(taskID))
-
 	task, err := m.SearchTask(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: Start: " + err.Error())
 		return -1, err
 	}
 	task.Status = StatusPending
@@ -267,47 +252,38 @@ func (m *Manager) Start(taskID int) (int, error) {
 }
 
 func (m *Manager) Stop(taskID int) (int, error) {
-	m.logger.Info("Stopping task " + strconv.Itoa(taskID))
 	executor, err := m.SearchTaskInExecutor(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: Stop: " + err.Error())
 		return -1, err
 	}
 
 	backInt, err := executor.Stop(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: Stop: " + err.Error())
 		return -1, err
 	}
 	return backInt, nil
 }
 
 func (m *Manager) Kill(taskID int) (int, error) {
-	m.logger.Info("Killing task " + strconv.Itoa(taskID))
 	executor, err := m.SearchTaskInExecutor(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: Kill: " + err.Error())
 		return -1, err
 	}
 
 	backInt, err := executor.Kill(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: Kill: " + err.Error())
 		return -1, err
 	}
 	return backInt, nil
 }
 
 func (m *Manager) Restart(taskID int) (int, error) {
-	m.logger.Info("Restarting task " + strconv.Itoa(taskID))
 	executor, err := m.SearchTaskInExecutor(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: Restart: " + err.Error())
 		return -1, err
 	}
 	backInt, err := executor.Restart(taskID)
 	if err != nil {
-		m.logger.Error("Cmd: Restart: " + err.Error())
 		return -1, err
 	}
 	return backInt, nil

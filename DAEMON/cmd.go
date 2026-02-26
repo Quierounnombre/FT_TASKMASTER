@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"taskmaster-daemon/executor"
 )
@@ -23,20 +22,21 @@ func (c *Cmd) Parse_cmd(msg *Msg) {
 
 // Error sender
 func (c *Cmd) send_error(msg *Msg, errorStr string, logger *executor.Logger) {
-	logger.Error(errorStr)
+	logger.Error("Cmd request: " + errorStr)
 	msg.add_payload("cmd", "error")
 	msg.add_payload("flags", errorStr)
 }
 
 // Execute commands
 func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
-	manager.Logger().Info(fmt.Sprintf("Request %s | flags: %v | profile_id: %d", c.base, c.flags, c.profile_id))
+	// manager.Logger().Info(fmt.Sprintf("Request %s | flags: %v | profile_id: %d", c.base, c.flags, c.profile_id)) // Debug
 	switch c.base {
 	case "load":
 		if c.flags == nil {
 			c.send_error(msg, "Load missing target", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Load profile from file: " + c.flags[0])
 		tmp := get_config_from_file_name(c.flags[0])
 		if tmp == nil {
 			c.send_error(msg, "Check file existance", manager.Logger())
@@ -61,13 +61,14 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "Reload missing target", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Reload profile " + c.flags[0])
 		profileID, _ := strconv.Atoi(c.flags[0])
 		tmp := get_config_from_file_name(manager.GetProfilePath(profileID))
 		if tmp == nil {
 			c.send_error(msg, "Check file existance", manager.Logger())
 			return
 		}
-		PrintFile_ConfigStruct(*tmp)
+		// PrintFile_ConfigStruct(*tmp) // Debug
 		execConfig := convertToExecutorConfig(*tmp, manager.Logger())
 		newProfileID, err := manager.ReloadProfile(execConfig, profileID)
 		tasks, err := manager.InfoStatusTasks(newProfileID)
@@ -86,6 +87,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "Unload missing target", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Unload profile " + c.flags[0])
 		profileID, _ := strconv.Atoi(c.flags[0])
 		err := manager.RemoveProfile(profileID)
 		if err != nil {
@@ -101,6 +103,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "Stop missing target", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Stop task " + c.flags[0])
 		taskID, _ := strconv.Atoi(c.flags[0])
 
 		newProfileID, err := manager.Stop(taskID)
@@ -117,6 +120,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "Start missing target", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Start task " + c.flags[0])
 		taskID, _ := strconv.Atoi(c.flags[0])
 		newProfileID, err := manager.Start(taskID)
 		if err != nil {
@@ -132,6 +136,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "Restart missing target", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Restart task " + c.flags[0])
 		taskID, _ := strconv.Atoi(c.flags[0])
 		newProfileID, err := manager.Restart(taskID)
 		if err != nil {
@@ -147,6 +152,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "Kill missing target", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Kill task " + c.flags[0])
 		taskID, _ := strconv.Atoi(c.flags[0])
 		newProfileID, err := manager.Kill(taskID)
 		if err != nil {
@@ -162,6 +168,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "Describe missing target", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Describe task " + c.flags[0])
 		taskID, _ := strconv.Atoi(c.flags[0])
 		taskDetail, err := manager.DescribeTask(taskID)
 		if err != nil {
@@ -179,6 +186,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "No profiles found", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: List profiles")
 		msg.add_payload("cmd", "ps")
 		msg.add_payload("profiles", profiles)
 
@@ -187,13 +195,13 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "Set a profile first dude", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: List tasks in profile " + strconv.Itoa(c.profile_id))
 		// List all tasks of a profile
 		tasks, err := manager.InfoStatusTasks(c.profile_id)
 		if err != nil {
 			c.send_error(msg, err.Error(), manager.Logger())
 			return
 		}
-
 		msg.add_payload("cmd", "ls")
 		msg.add_payload("procs", tasks)
 
@@ -202,6 +210,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "ch missing targets", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Change profile " + c.flags[0])
 		// Change current profile
 		profileID, _ := strconv.Atoi(c.flags[0])
 		_, err := manager.CheckProfileExists(profileID)
@@ -218,6 +227,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 			c.send_error(msg, "Set a profile first dude", manager.Logger())
 			return
 		}
+		manager.Logger().Info("Cmd request: Russian roulette")
 		tasks, err := manager.InfoStatusTasks(c.profile_id)
 		if err != nil {
 			c.send_error(msg, err.Error(), manager.Logger())

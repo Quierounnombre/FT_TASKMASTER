@@ -9,25 +9,25 @@ const socket_path = "/run/taskmaster.sock"
 
 func main() {
 	var sock_config Sock_Config
+	manager := executor.NewManager()
+	logger := manager.Logger()
 
 	sock_config.sig_ch = set_channel_for_signals()
-	sock_config.cli_ch = socket_wrapper(socket_path, &sock_config)
+	sock_config.cli_ch = socket_wrapper(socket_path, &sock_config, logger)
 
 	//PrintConfigStruct(*config)
 
-	loop(&sock_config)
+	loop(&sock_config, manager)
 }
 
 /*
 Main loop with signal support
 */
-func loop(sock_config *Sock_Config) {
+func loop(sock_config *Sock_Config, manager *executor.Manager) {
 	var signal os.Signal
-	var manager *executor.Manager
 	var msg Msg
 	var cmd Cmd
 
-	manager = executor.NewManager()
 	for true {
 		select {
 		case signal = <-sock_config.sig_ch:

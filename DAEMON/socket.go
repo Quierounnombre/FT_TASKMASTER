@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 	"os"
-	"encoding/json"
+	"taskmaster-daemon/executor"
 )
 
 type Sock_Config struct {
@@ -15,7 +16,7 @@ type Sock_Config struct {
 }
 
 // Small funtion for creating the socket
-func create_socket(socket_path string) net.Listener {
+func create_socket(socket_path string, logger *executor.Logger) net.Listener {
 	var sk net.Listener
 	var err error
 
@@ -26,11 +27,12 @@ func create_socket(socket_path string) net.Listener {
 		fmt.Println("RUN WITH SUDO")
 		os.Exit(1)
 	}
+	logger.Info("Socket created at " + socket_path)
 	return (sk)
 }
 
 // Manage the creation of the connection with client
-func handle_connection(sk net.Listener, ch chan Msg, config *Sock_Config) {
+func handle_connection(sk net.Listener, ch chan Msg, config *Sock_Config, logger *executor.Logger) {
 	var con net.Conn
 	var err error
 
@@ -42,7 +44,7 @@ func handle_connection(sk net.Listener, ch chan Msg, config *Sock_Config) {
 			os.Exit(1)
 		}
 		config.cons = append(config.cons, con)
-		go handle_client(con, ch, config)
+		go handle_client(con, ch, config, logger)
 	}
 }
 
@@ -59,7 +61,7 @@ func remove_closed_client(target_conn net.Conn, config *Sock_Config) {
 }
 
 // HANDLE THE CLIENT RECIVING DATA
-func handle_client(conn net.Conn, ch chan Msg, config *Sock_Config) {
+func handle_client(conn net.Conn, ch chan Msg, config *Sock_Config, logger *executor.Logger) {
 	var decoder *json.Decoder
 	var msg Msg
 	var err error
@@ -73,10 +75,10 @@ func handle_client(conn net.Conn, ch chan Msg, config *Sock_Config) {
 			remove_closed_client(conn, config)
 			conn.Close()
 			if err == io.EOF {
-				fmt.Println("DISCONNECTION")
+				logger.Info("Client disconnected")
 				break
 			}
-			fmt.Println("ERROR_RECIVING_DATA")
+			logger.Error("Error reciving data")
 			break
 		}
 		ch <- msg
@@ -100,12 +102,12 @@ func broadcast_data(connections []net.Conn, str string) {
 }
 
 // Generates a go channel and starts the subrutine for sending data through the channel
-func socket_wrapper(socket_path string, config *Sock_Config) chan Msg {
+func socket_wrapper(socket_path string, config *Sock_Config, logger *executor.Logger) chan Msg {
 	var ch chan Msg
 	var sk net.Listener
 
-	sk = create_socket(socket_path)
+	sk = create_socket(socket_path, logger)
 	ch = make(chan Msg)
-	go handle_connection(sk, ch, config)
+	go handle_connection(sk, ch, config, logger)
 	return (ch)
 }
