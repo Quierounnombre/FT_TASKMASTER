@@ -31,7 +31,7 @@ process:
     stop_signal: "10"
     stdout: /tmp/stop_ok_nokw.log
     env:
-      CLEANUP_TIME: "2"
+      CLEANUP_TIME: "0"
 
   # ── 2. FAILED STOP → KILL — no kill_wait, SIGHUP (1) ────────────────────────
   # graceful_shutdown.sh traps SIGHUP via handle_hup which just logs and keeps running.
@@ -45,7 +45,7 @@ process:
     cmd: /app/tests/scripts/graceful_shutdown.sh
     restart: never
     start_at_launch: true
-    stop_signal: "1"
+    stop_signal: "15"
     stdout: /tmp/stop_fail_nokw.log
     env:
       CLEANUP_TIME: "2"
@@ -62,11 +62,11 @@ process:
     cmd: /app/tests/scripts/graceful_shutdown.sh
     restart: never
     start_at_launch: true
-    stop_signal: "10"
+    stop_signal: "15"
     kill_wait: 6s
     stdout: /tmp/stop_ok_kw.log
     env:
-      CLEANUP_TIME: "2"
+      CLEANUP_TIME: "4"
 
   # ── 4. STOP TIMEOUT → KILL — with kill_wait, SIGINT (2) ─────────────────────
   # graceful_shutdown.sh does NOT trap SIGINT so the default SIGINT handler
