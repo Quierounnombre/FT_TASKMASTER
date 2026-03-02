@@ -64,7 +64,8 @@ func (w *Watcher) checkProfile(profile *Profile) {
 	defer profile.executor.mu.Unlock()
 
 	for id, task := range profile.executor.tasks {
-		if task.Status == StatusTerminating {
+		if task.Status == StatusWaiting {
+			go w.handleWaiting(task, profile.executor)
 			continue
 		}
 		if task.Status == StatusPending {
@@ -81,29 +82,16 @@ func (w *Watcher) checkProfile(profile *Profile) {
 			w.handleRestart(id, task, profile.executor)
 			w.manager.Logger().Info("Task " + strconv.Itoa(id) + " restarted")
 		}
-		if task.Status == StatusStopping {
-			go w.handleStop(task, profile.executor)
-			w.manager.Logger().Info("Task " + strconv.Itoa(id) + " stopping")
-		}
 	}
 }
 
-func (w *Watcher) handleStop(task *Task, executor *Executor) {
-	go executor.Stop(task.ID)
-	task.StartTime = time.Now()
-	// count time to kill
-	for {
-		if task.Status == StatusStopped {
-			w.manager.Logger().Info("Task " + strconv.Itoa(task.ID) + " stopped successfully")
-			break
-		}
-		// kill if time is up
-		if time.Since(task.StartTime) > task.Kill_wait {
-			executor.Kill(task.ID)
-			w.manager.Logger().Info("Task " + strconv.Itoa(task.ID) + " killed due to timeout")
-		}
-		time.Sleep(1 * time.Second)
+func (w *Watcher) handleWaiting(task *Task, executor *Executor) {
+	w.manager.Logger().Info("Task " + strconv.Itoa(task.ID) + " waiting to start in " + strconv.Itoa(int(task.launchWait)) + " seconds")
+	if task.launchWait > 0 {
+		time.Sleep(task.launchWait)
 	}
+	w.launchTask(executor, task.ID)
+	w.manager.Logger().Info("Task " + strconv.Itoa(task.ID) + " started")
 }
 
 func (w *Watcher) handleProcessDeath(task *Task, executor *Executor) {

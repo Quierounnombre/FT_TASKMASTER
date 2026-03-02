@@ -14,13 +14,12 @@ cleanup() {
 handle_usr1() {
     echo "[graceful] Received SIGUSR1 — custom stop signal!"
     echo "[graceful] Performing quick shutdown..."
-    sleep 1
     echo "[graceful] Done. Exiting."
     exit 0
 }
 
 handle_hup() {
-    echo "[graceful] Received SIGHUP — ignoring (reload not supported)"
+    echo "[graceful] Received SIGHUP — ignoring, still running!"
 }
 
 trap cleanup TERM
@@ -28,7 +27,7 @@ trap handle_usr1 USR1
 trap handle_hup HUP
 
 echo "[graceful] Started PID: $$"
-echo "[graceful] Waiting for signals (SIGTERM, SIGUSR1, SIGHUP)..."
+echo "[graceful] Waiting for signals (SIGTERM, SIGUSR1)..."
 
 while true; do
     echo "[graceful] Still alive at $(date +%T)"

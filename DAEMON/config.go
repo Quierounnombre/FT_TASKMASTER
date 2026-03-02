@@ -65,12 +65,6 @@ func extract_file_content(raw_yaml []byte) *File_Config {
 func set_config_defaults(config *File_Config) {
 	for index := range config.Process {
 		p := &config.Process[index]
-		if p.Kill_wait.Seconds() < float64(time.Second) {
-			p.Kill_wait = time.Second
-		}
-		if p.Launch_wait.Seconds() < float64(time.Second) {
-			p.Launch_wait = time.Second
-		}
 		if len(p.Expected_exit) == 0 {
 			p.Expected_exit = append(p.Expected_exit, 0)
 		}

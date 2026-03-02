@@ -5,6 +5,7 @@ import (
 	"io"
 	"os/exec"
 	"slices"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -49,7 +50,7 @@ func (e *Executor) initTask(process Process, nextID *int) {
 		}
 
 		// Cmd configuration - run through shell to handle scripts and arguments
-		cmd := exec.Command("/bin/sh", "-c", process.Cmd)
+		cmd := exec.Command("/bin/bash", "-c", process.Cmd)
 		// Set environment variables
 		cmd.Env = envSlice
 
@@ -72,12 +73,16 @@ func (e *Executor) initTask(process Process, nextID *int) {
 		var initStatus Status
 		if process.Start_at_launch {
 			if process.Launch_wait > 0 {
-				initStatus = StatusPending
+				initStatus = StatusWaiting
 			} else {
-				initStatus = StatusRunning
+				initStatus = StatusPending
 			}
 		} else {
 			initStatus = StatusNotLaunched
+		}
+		if process.Launch_wait > 0 {
+			initStatus = StatusWaiting
+			process.Start_at_launch = true
 		}
 
 		// Create and store the task
@@ -98,6 +103,7 @@ func (e *Executor) initTask(process Process, nextID *int) {
 			restartPolicy:     process.Restart,
 			launchWait:        process.Launch_wait,
 			startAtLaunch:     process.Start_at_launch,
+			Kill_wait:         process.Kill_wait,
 		}
 		e.tasks[taskID] = task
 	}
@@ -116,7 +122,7 @@ func (e *Executor) CheckTaskExists(id int) (*Task, error) {
 
 func (e *Executor) isExpectedExitCode(task *Task) bool {
 	// Checks if exit status is in expected exit codes
-	if task.ExpectedExitCodes == nil {
+	if task.ExpectedExitCodes == nil || task.Status == StatusKilled {
 		return true
 	}
 	return slices.Contains(task.ExpectedExitCodes, task.ExitCode)
@@ -148,6 +154,9 @@ func (e *Executor) recreateCmd(task *Task) {
 	if task.WorkingDir != "" {
 		cmd.Dir = task.WorkingDir
 	}
+	// Put the subprocess in its own process group so signals reach the
+	// actual script child, not just the /bin/sh wrapper.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	task.Cmd = cmd
 }
 
@@ -174,6 +183,15 @@ func (e *Executor) Start(id int) (int, error) {
 	}
 	if f, ok := task.StderrWriter.(interface{ Sync() error }); ok {
 		f.Sync()
+	}
+
+	// If the task was being stopped, the process exit is expected — mark as stopped
+	fmt.Println("Task " + strconv.Itoa(id) + " finished and now here comes the stop")
+	if task.Status == StatusStopping {
+		fmt.Println("Task " + strconv.Itoa(id) + " stopped successfully")
+		task.Status = StatusStopped
+		task.EndTime = time.Now()
+		return id, nil // return early — signal-induced exit is not an error
 	}
 
 	if err != nil {
@@ -231,26 +249,70 @@ func (e *Executor) GetTaskDetail(id int) (*TaskDetail, error) {
 	return taskDetail, nil
 }
 
-func (e *Executor) Stop(id int) (int, error) {
-
+func (e *Executor) Stop(id int, logger *Logger) {
 	task, err := e.CheckTaskExists(id)
 	if err != nil {
-		return -1, err
+		return
 	}
 
 	e.mu.Lock()
-	defer e.mu.Unlock()
 	if task.Status != StatusRunning {
-		return -1, fmt.Errorf("task %d is not running", id)
+		e.mu.Unlock()
+		return
 	}
+	task.Status = StatusStopping
 
-	if err := task.Cmd.Process.Signal(syscall.Signal(task.Stop_signal)); err != nil {
-		return -1, fmt.Errorf("failed to stop task: %w", err)
+	// Send the stop signal to the entire process group (negative PID) so the
+	// signal reaches the actual script, not just the /bin/sh parent process.
+	if err := syscall.Kill(-task.Cmd.Process.Pid, syscall.Signal(task.Stop_signal)); err != nil {
+		e.mu.Unlock()
+		logger.Error("Task {" + strconv.Itoa(task.ID) + "} failed to stop: " + err.Error())
+		return
 	}
-	task.Status = StatusStopped
-	task.EndTime = time.Now()
+	e.mu.Unlock()
 
-	return id, nil
+	time.Sleep(500 * time.Millisecond)
+
+	e.mu.Lock()
+	fmt.Println("Task " + strconv.Itoa(task.ID) + " has status: " + string(task.Status))
+	if task.Kill_wait == 0 {
+		fmt.Println("--> Yes")
+		if task.Status != StatusStopped {
+			fmt.Println("--> YEEEES")
+			e.mu.Unlock()
+			if _, err := e.Kill(task.ID); err != nil {
+				logger.Error("Task {" + strconv.Itoa(task.ID) + "} failed to kill: " + err.Error())
+				return
+			}
+			logger.Error("Task {" + strconv.Itoa(task.ID) + "} killed due to stop didn't work")
+			return
+		}
+	} else {
+		// Send stop signal and wait for the task to stop
+		fmt.Println("Task " + strconv.Itoa(task.ID) + " debe ser matado con kill_wait")
+		StartTime := time.Now()
+		for {
+			if task.Status == StatusStopped {
+				break
+			}
+			// Kill if time is up
+			if time.Since(StartTime) > time.Duration(task.Kill_wait) {
+				e.mu.Unlock()
+				if _, err := e.Kill(task.ID); err != nil {
+					logger.Error("Task {" + strconv.Itoa(task.ID) + "} failed to kill: " + err.Error())
+					return
+				}
+				logger.Error("Task {" + strconv.Itoa(task.ID) + "} killed due to timeout")
+				return
+			}
+			e.mu.Unlock()
+			time.Sleep(1 * time.Second)
+			e.mu.Lock()
+			fmt.Println("Task " + strconv.Itoa(task.ID) + " waiting to be killed " + strconv.Itoa(int(time.Since(StartTime)/time.Second)) + "s")
+		}
+	}
+	e.mu.Unlock()
+	logger.Info("Task {" + strconv.Itoa(task.ID) + "} stopped successfully")
 }
 
 func (e *Executor) Kill(id int) (int, error) {
@@ -262,11 +324,16 @@ func (e *Executor) Kill(id int) (int, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	if task.Status != StatusRunning {
-		return -1, fmt.Errorf("task %d is not running", id)
+	if task.Status != StatusRunning && task.Status != StatusStopping {
+		return -1, fmt.Errorf("task %d is not running or stopping", id)
 	}
 
-	if err := task.Cmd.Process.Kill(); err != nil {
+	if task.Cmd.Process == nil {
+		return -1, fmt.Errorf("task %d process not started", id)
+	}
+
+	// Kill the entire process group so the script child is also killed.
+	if err := syscall.Kill(-task.Cmd.Process.Pid, syscall.SIGKILL); err != nil {
 		return -1, fmt.Errorf("failed to kill task: %w", err)
 	}
 	task.Status = StatusKilled

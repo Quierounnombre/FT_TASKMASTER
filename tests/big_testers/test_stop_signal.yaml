@@ -1,21 +1,88 @@
-# test_stop_signal.yaml — Custom stop signal handling
-# EXPECTED: graceful_shutdown.sh handles SIGTERM and SIGUSR1
-# VERIFY:
-#   - Stop "signal-term" → should see SIGTERM cleanup in log
-#   - Stop "signal-handler" → should handle the signal in log
+# =============================================================================
+# test_stop_signal.yaml — Stop signal handling & kill_wait scenarios
+# =============================================================================
+# All 4 stop paths exercised, each with a DIFFERENT signal (numeric values
+# required — the adapter only parses integers; named strings fall back to SIGTERM).
+#
+# Signal reference:
+#   1  = SIGHUP    15 = SIGTERM
+#   2  = SIGINT    10 = SIGUSR1
+#
+# MANUAL TEST STEPS (launch all tasks first, then stop one at a time):
+#   1. load this file → `load <path>`
+#   2. `ls` to confirm all 4 tasks are running
+#   3. Follow per-task VERIFY instructions below
+# =============================================================================
+
 process:
-  - name: signal-term
+
+  # ── 1. SUCCESSFUL STOP — no kill_wait, SIGTERM (15) ─────────────────────────
+  # graceful_shutdown.sh traps SIGTERM → cleans up in 2s → exits 0.
+  # kill_wait is 0 so handleStop sends the signal and checks status directly.
+  # EXPECTED: status → "stopped"
+  # VERIFY:
+  #   stop <taskID>
+  #   cat /tmp/stop_ok_nokw.log  → see "[graceful] Received SIGTERM" + "Cleanup complete"
+  #   ls <taskID>               → status: stopped
+  - name: stop-ok-no-kill-wait
     cmd: /app/tests/scripts/graceful_shutdown.sh
     restart: never
     start_at_launch: true
-    stop_signal: SIGTERM
-    stdout: /tmp/test_signal_term.log
+    stop_signal: "10"
+    stdout: /tmp/stop_ok_nokw.log
     env:
       CLEANUP_TIME: "2"
 
-  - name: signal-handler
-    cmd: /app/tests/scripts/signalReceiver.sh
+  # ── 2. FAILED STOP → KILL — no kill_wait, SIGHUP (1) ────────────────────────
+  # graceful_shutdown.sh traps SIGHUP via handle_hup which just logs and keeps running.
+  # handleStop sends SIGHUP, task stays alive → executor.Kill() is called.
+  # EXPECTED: status → "killed"
+  # VERIFY:
+  #   stop <taskID>
+  #   cat /tmp/stop_fail_nokw.log → see "[graceful] Received SIGHUP — ignoring" but never exits
+  #   ls <taskID>                → status: killed
+  - name: stop-fail-no-kill-wait
+    cmd: /app/tests/scripts/graceful_shutdown.sh
     restart: never
     start_at_launch: true
-    stop_signal: SIGTERM
-    stdout: /tmp/test_signal_handler.log
+    stop_signal: "1"
+    stdout: /tmp/stop_fail_nokw.log
+    env:
+      CLEANUP_TIME: "2"
+
+  # ── 3. SUCCESSFUL STOP — with kill_wait, SIGUSR1 (10) ───────────────────────
+  # graceful_shutdown.sh traps SIGUSR1 → quick 1s shutdown.
+  # kill_wait=6s gives it more than enough time → stops before timeout.
+  # EXPECTED: status → "stopped"
+  # VERIFY:
+  #   stop <taskID>
+  #   cat /tmp/stop_ok_kw.log → see "[graceful] Received SIGUSR1" + "Done. Exiting."
+  #   ls <taskID>             → status: stopped  (within ~2s, well before 6s timeout)
+  - name: stop-ok-kill-wait
+    cmd: /app/tests/scripts/graceful_shutdown.sh
+    restart: never
+    start_at_launch: true
+    stop_signal: "10"
+    kill_wait: 6s
+    stdout: /tmp/stop_ok_kw.log
+    env:
+      CLEANUP_TIME: "2"
+
+  # ── 4. STOP TIMEOUT → KILL — with kill_wait, SIGINT (2) ─────────────────────
+  # graceful_shutdown.sh does NOT trap SIGINT so the default SIGINT handler
+  # in bash does not allow a clean trap exit; here we use SIGTERM trap but
+  # set CLEANUP_TIME=10s so cleanup will exceed kill_wait=3s → force killed.
+  # EXPECTED: status → "killed"
+  # VERIFY:
+  #   stop <taskID>         → wait ~3s
+  #   cat /tmp/stop_timeout_kw.log → may see "[graceful] Received SIGTERM" but no "Cleanup complete"
+  #   ls <taskID>           → status: killed  (killed due to timeout in watcher log)
+  - name: stop-timeout-kill-wait
+    cmd: /app/tests/scripts/graceful_shutdown.sh
+    restart: never
+    start_at_launch: true
+    stop_signal: "15"
+    kill_wait: 3s
+    stdout: /tmp/stop_timeout_kw.log
+    env:
+      CLEANUP_TIME: "10"

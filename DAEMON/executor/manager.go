@@ -123,15 +123,9 @@ func (m *Manager) RemoveProfile(profileID int) error {
 		return err
 	}
 
-	profile.executor.mu.Lock()
-	for _, task := range profile.executor.tasks {
-		task.Status = StatusTerminating
-	}
-	profile.executor.mu.Unlock()
-
 	taskIDs := profile.executor.ListTasks()
 	for _, taskID := range taskIDs {
-		profile.executor.Stop(taskID)
+		go profile.executor.Stop(taskID, m.logger)
 	}
 
 	m.mu.Lock()
@@ -148,12 +142,6 @@ func (m *Manager) ReloadProfile(config File_Config, profileID int) (int, error) 
 		m.logger.Error("Cmd: ReloadProfile: Profile " + strconv.Itoa(profileID) + " not found")
 		return -1, err
 	}
-
-	profile.executor.mu.Lock()
-	for _, task := range profile.executor.tasks {
-		task.Status = StatusTerminating
-	}
-	profile.executor.mu.Unlock()
 
 	taskIDs := profile.executor.ListTasks()
 	for _, taskID := range taskIDs {
@@ -252,11 +240,12 @@ func (m *Manager) Start(taskID int) (int, error) {
 }
 
 func (m *Manager) Stop(taskID int) (int, error) {
-	task, err := m.SearchTask(taskID)
+	m.logger.Info("Cmd: Stop: Stopping task " + strconv.Itoa(taskID))
+	executor, err := m.SearchTaskInExecutor(taskID)
 	if err != nil {
 		return -1, err
 	}
-	task.Status = StatusStopping
+	go executor.Stop(taskID, m.logger)
 	return taskID, nil
 }
 

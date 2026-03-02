@@ -37,13 +37,13 @@ type Status string
 const (
 	StatusPending     Status = "pending"
 	StatusNotLaunched Status = "not launched"
+	StatusWaiting     Status = "waiting"
 	StatusKilled      Status = "killed"
 	StatusRunning     Status = "running"
 	StatusStopping    Status = "stopping"
 	StatusStopped     Status = "stopped"
 	StatusFailed      Status = "failed"
 	StatusSuccess     Status = "success"
-	StatusTerminating Status = "terminating"
 )
 
 type Task struct {
