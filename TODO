@@ -37,10 +37,7 @@ reload missing target error
 ----> PABLETO PARTE <----
 TODO:
 - reload no borra procesos que no han sido tocados
-- ls has the option to pass the profile by flag to list any profile
-- signal to stop the program
 - How long the program should be running after it’s started for it to be considered "successfully started"
-- How long to wait after a graceful stop before killing the program
 
 Old status:
 Hasta ahora lo que hemos hecho son un manager que tiene profiles (cada archivo de configuracion)
