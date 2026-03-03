@@ -31,6 +31,12 @@ func (c *Cmd) send_error(msg *Msg, errorStr string, logger *executor.Logger) {
 func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 	// manager.Logger().Info(fmt.Sprintf("Request %s | flags: %v | profile_id: %d", c.base, c.flags, c.profile_id)) // Debug
 	switch c.base {
+	// case "shutdown":
+	// 	manager.Logger().Info("Cmd request: Shutdown daemon")
+	// 	manager.Shutdown()
+	// 	msg.add_payload("cmd", "shutdown")
+	// 	exit(0)
+
 	case "load":
 		if c.flags == nil {
 			c.send_error(msg, "Load missing target", manager.Logger())

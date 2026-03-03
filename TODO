@@ -37,6 +37,7 @@ reload missing target error
 ----> PABLETO PARTE <----
 TODO:
 - shutdown cmd!
+- reloadall cmd!
 - How long the program should be running after it’s started for it to be considered "successfully started"
 
 Old status:
