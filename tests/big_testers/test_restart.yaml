@@ -1,0 +1,91 @@
+# test_restart_always.yaml — Watcher should always restart these tasks
+# EXPECTED: Tasks crash and the watcher restarts them repeatedly
+# VERIFY: `describe <taskID>` → RestartCount should keep increasing
+process:
+  - name: always-restart-crash
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    env:
+      CRASH_DELAY: "2"
+
+  - name: always-restart-exit42
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: always
+    start_at_launch: true
+    expected_exit:
+      - 0
+    env:
+      EXIT_CODE: "42"
+
+# test_restart_limit.yaml — Maximum restart attempts
+# EXPECTED:
+#   - "limited-3" crashes repeatedly but stops restarting after 3 attempts
+#   - "limited-1" crashes and stops restarting after 1 attempt
+#   - "unlimited" crashes and keeps restarting forever (restart_atemps = 0)
+# VERIFY: `describe <taskID>` → check RestartCount stops at max
+  - name: limited-3
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    restart_atemps: 3
+    env:
+      CRASH_DELAY: "1"
+
+  - name: limited-1
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    restart_atemps: 1
+    env:
+      CRASH_DELAY: "1"
+
+  - name: unlimited
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: always
+    start_at_launch: true
+    restart_atemps: 0
+    env:
+      CRASH_DELAY: "2"
+
+# test_restart_never.yaml — No restart after failure
+# EXPECTED: Tasks crash once and stay in "failed" status permanently
+# VERIFY: `ls` → status stays "failed", RestartCount = 0
+  - name: crash-no-restart
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: never
+    start_at_launch: true
+    env:
+      CRASH_DELAY: "1"
+
+  - name: bad-exit-no-restart
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: never
+    start_at_launch: true
+    env:
+      EXIT_CODE: "137"
+
+# test_restart_on_error.yaml — Restart only on unexpected exit codes
+# EXPECTED:
+#   - "crash-unexpected" exits 1 (unexpected) → watcher restarts it
+#   - "exit-expected" exits 42 (expected) → no restart, stays "stopped"
+# VERIFY: `describe <taskID>` to check RestartCount and status
+  - name: crash-unexpected
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: on_error
+    start_at_launch: true
+    expected_exit:
+      - 0
+    env:
+      CRASH_DELAY: "2"
+      CRASH_EXIT: "1"
+
+  - name: exit-expected
+    cmd: /app/tests/scripts/exit_code.sh
+    restart: on_error
+    start_at_launch: true
+    expected_exit:
+      - 0
+      - 42
+    env:
+      EXIT_CODE: "42"
