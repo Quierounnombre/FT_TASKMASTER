@@ -120,9 +120,6 @@ func recive_start(json *map[string]interface{}, rl *readline.Instance) {
 	id = get_id(json)
 	if id != -1 {
 		rl.Write([]byte("Started process with process id: " + strconv.Itoa(id) + "\n"))
-	}
-	if id != -1 {
-		rl.Write([]byte("Started process with process id: " + strconv.Itoa(id) + "\n"))
 	} else {
 		rl.Write([]byte("Process dosen't exist\n"))
 	}
