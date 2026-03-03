@@ -191,13 +191,22 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 		msg.add_payload("profiles", profiles)
 
 	case "ls":
-		if c.profile_id == 0 {
+		if c.profile_id == 0 && c.flags == nil {
 			c.send_error(msg, "Set a profile first dude", manager.Logger())
 			return
 		}
 		manager.Logger().Info("Cmd request: List tasks in profile " + strconv.Itoa(c.profile_id))
+		profileID := c.profile_id
+		var err error
+		if c.flags != nil {
+			profileID, err = strconv.Atoi(c.flags[0])
+			if err != nil {
+				c.send_error(msg, "Invalid profile ID", manager.Logger())
+				return
+			}
+		}
 		// List all tasks of a profile
-		tasks, err := manager.InfoStatusTasks(c.profile_id)
+		tasks, err := manager.InfoStatusTasks(profileID)
 		if err != nil {
 			c.send_error(msg, err.Error(), manager.Logger())
 			return
