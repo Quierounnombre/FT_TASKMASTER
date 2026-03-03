@@ -111,7 +111,6 @@ func (m *Manager) AddProfile(config File_Config) int {
 		executor:       executor,
 		configFilePath: config.Path,
 	}
-	fmt.Println("Profile added with ID: " + strconv.Itoa(profileID))
 	return profileID
 }
 
@@ -143,16 +142,91 @@ func (m *Manager) ReloadProfile(config File_Config, profileID int) (int, error) 
 		return -1, err
 	}
 
-	taskIDs := profile.executor.ListTasks()
-	for _, taskID := range taskIDs {
-		profile.executor.Kill(taskID)
+	exec := profile.executor
+
+	// Build map of NEW process names from config
+	newProcesses := make(map[string]Process)
+	for _, p := range config.Process {
+		newProcesses[p.Name] = p
 	}
 
-	newExecutor := NewExecutor(&config, &m.nextID)
+	// Build map of EXISTING base process names → task IDs
+	// For num_procs > 1, tasks are named "name_0", "name_1", etc.
+	// We collect all task IDs grouped by their base process name.
+	existingBaseNames := make(map[string][]int) // baseName → []taskID
+	taskIDs := exec.ListTasks()
+	for _, taskID := range taskIDs {
+		task, taskErr := exec.CheckTaskExists(taskID)
+		if taskErr != nil {
+			continue
+		}
+		// Determine base name: try to find matching process name from new or old config
+		baseName := task.Name
+		for name := range newProcesses {
+			if task.Name == name || (len(task.Name) > len(name)+1 && task.Name[:len(name)+1] == name+"_") {
+				baseName = name
+				break
+			}
+		}
+		existingBaseNames[baseName] = append(existingBaseNames[baseName], taskID)
+	}
 
-	m.mu.Lock()
-	profile.executor = newExecutor
-	m.mu.Unlock()
+	// 1. REMOVE tasks whose base process name no longer exists in new config
+	for baseName, ids := range existingBaseNames {
+		if _, exists := newProcesses[baseName]; !exists {
+			for _, id := range ids {
+				m.logger.Info("Removing task " + strconv.Itoa(id) + " (process '" + baseName + "' no longer in config)")
+				exec.RemoveTask(id, m.logger)
+			}
+		}
+	}
+
+	// 2. UPDATE tasks that exist in both old and new config
+	for baseName, ids := range existingBaseNames {
+		newProc, exists := newProcesses[baseName]
+		if !exists {
+			continue
+		}
+
+		newNumProcs := newProc.Num_procs
+		if newNumProcs <= 0 {
+			newNumProcs = 1
+		}
+		currentCount := len(ids)
+
+		// Update existing instances (up to min of current and new count)
+		updateCount := currentCount
+		if newNumProcs < updateCount {
+			updateCount = newNumProcs
+		}
+		for i := 0; i < updateCount; i++ {
+			exec.UpdateTask(ids[i], newProc, m.logger)
+		}
+
+		// If new num_procs > current count, add more instances
+		if newNumProcs > currentCount {
+			addProc := newProc
+			addProc.Num_procs = newNumProcs - currentCount
+			// Adjust names for additional instances — initTask handles naming
+			exec.AddTask(addProc, &m.nextID)
+		}
+
+		// If new num_procs < current count, remove excess instances
+		if newNumProcs < currentCount {
+			for i := newNumProcs; i < currentCount; i++ {
+				m.logger.Info("Removing excess instance " + strconv.Itoa(ids[i]) + " of process '" + baseName + "'")
+				exec.RemoveTask(ids[i], m.logger)
+			}
+		}
+	}
+
+	// 3. ADD processes that are completely new (not in existing tasks)
+	for name, proc := range newProcesses {
+		if _, exists := existingBaseNames[name]; !exists {
+			m.logger.Info("Adding new process '" + name + "'")
+			exec.AddTask(proc, &m.nextID)
+		}
+	}
 
 	return profileID, nil
 }

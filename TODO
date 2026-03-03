@@ -36,7 +36,7 @@ reload missing target error
 
 ----> PABLETO PARTE <----
 TODO:
-- reload no borra procesos que no han sido tocados
+- shutdown cmd!
 - How long the program should be running after it’s started for it to be considered "successfully started"
 
 Old status:

@@ -1,0 +1,64 @@
+# test_reload.yaml — Smart Profile Reload Test
+#
+# HOW TO USE:
+#   1. Load this file:              load /app/tests/big_testers/test_reload.yaml
+#   2. Verify all 3 tasks running:  ls
+#   3. Edit this file IN-PLACE with the changes described below, then:  reload <profileID>
+#   4. Verify the result with:      ls
+#
+# INITIAL STATE (3 processes: keeper, modifier, remover):
+#   - "keeper"   → long_running, heartbeat 2s  — should stay UNCHANGED after reload
+#   - "modifier" → long_running, heartbeat 3s  — will be MODIFIED (change cmd/env)
+#   - "remover"  → graceful_shutdown            — will be REMOVED from config
+#
+# AFTER MANUAL EDIT (apply changes below, then reload):
+#   - "keeper"   → SAME config              → EXPECTED: still running, NOT restarted
+#   - "modifier" → change heartbeat to 1s   → EXPECTED: restarted with new config
+#   - "remover"  → DELETE this entry         → EXPECTED: killed and removed
+#   - "newcomer" → ADD this new entry        → EXPECTED: appears as new task
+#
+# ──────────────────────────────────────────────
+# STEP 3 EDITS — Make these changes manually:
+#
+#   a) Leave "keeper" UNTOUCHED
+#
+#   b) Change "modifier" env HEARTBEAT_INTERVAL from "3" to "1"
+#
+#   c) Delete the entire "remover" block
+#
+#   d) Add this new block at the end:
+#        - name: newcomer
+#          cmd: /app/tests/scripts/long_running.sh
+#          restart: never
+#          start_at_launch: true
+#          env:
+#            HEARTBEAT_INTERVAL: "1"
+#
+# EXPECTED RESULT after reload + ls:
+#   - keeper:   status=running, NOT restarted (same PID, same uptime)
+#   - modifier: status=pending/running, restarted (new PID, reset uptime)
+#   - remover:  GONE from task list
+#   - newcomer: status=pending or running (newly created)
+# ──────────────────────────────────────────────
+
+process:
+  - name: keeper
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true
+    env:
+      HEARTBEAT_INTERVAL: "2"
+
+  - name: modifier
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true
+    env:
+      HEARTBEAT_INTERVAL: "3"
+
+  - name: remover
+    cmd: /app/tests/scripts/graceful_shutdown.sh
+    restart: never
+    start_at_launch: true
+    env:
+      CLEANUP_TIME: "2"

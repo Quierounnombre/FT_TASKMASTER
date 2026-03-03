@@ -70,8 +70,8 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 		}
 		// PrintFile_ConfigStruct(*tmp) // Debug
 		execConfig := convertToExecutorConfig(*tmp, manager.Logger())
-		newProfileID, err := manager.ReloadProfile(execConfig, profileID)
-		tasks, err := manager.InfoStatusTasks(newProfileID)
+		ProfileID, err := manager.ReloadProfile(execConfig, profileID)
+		tasks, err := manager.InfoStatusTasks(ProfileID)
 		if err != nil {
 			c.send_error(msg, err.Error(), manager.Logger())
 			return
@@ -79,7 +79,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 
 		msg.add_payload("cmd", "reload")
 		msg.add_payload("flags", c.flags[0])
-		msg.add_payload("id", newProfileID)
+		msg.add_payload("id", ProfileID)
 		msg.add_payload("task", tasks)
 
 	case "unload":

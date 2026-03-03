@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"reflect"
 	"slices"
 	"strconv"
 	"syscall"
@@ -186,9 +187,7 @@ func (e *Executor) Start(id int) (int, error) {
 	}
 
 	// If the task was being stopped, the process exit is expected — mark as stopped
-	fmt.Println("Task " + strconv.Itoa(id) + " finished and now here comes the stop")
 	if task.Status == StatusStopping {
-		fmt.Println("Task " + strconv.Itoa(id) + " stopped successfully")
 		task.Status = StatusStopped
 		task.EndTime = time.Now()
 		return id, nil // return early — signal-induced exit is not an error
@@ -274,11 +273,8 @@ func (e *Executor) Stop(id int, logger *Logger) {
 	time.Sleep(500 * time.Millisecond)
 
 	e.mu.Lock()
-	fmt.Println("Task " + strconv.Itoa(task.ID) + " has status: " + string(task.Status))
 	if task.Kill_wait == 0 {
-		fmt.Println("--> Yes")
 		if task.Status != StatusStopped {
-			fmt.Println("--> YEEEES")
 			e.mu.Unlock()
 			if _, err := e.Kill(task.ID); err != nil {
 				logger.Error("Task {" + strconv.Itoa(task.ID) + "} failed to kill: " + err.Error())
@@ -289,7 +285,6 @@ func (e *Executor) Stop(id int, logger *Logger) {
 		}
 	} else {
 		// Send stop signal and wait for the task to stop
-		fmt.Println("Task " + strconv.Itoa(task.ID) + " debe ser matado con kill_wait")
 		StartTime := time.Now()
 		for {
 			if task.Status == StatusStopped {
@@ -308,7 +303,7 @@ func (e *Executor) Stop(id int, logger *Logger) {
 			e.mu.Unlock()
 			time.Sleep(1 * time.Second)
 			e.mu.Lock()
-			fmt.Println("Task " + strconv.Itoa(task.ID) + " waiting to be killed " + strconv.Itoa(int(time.Since(StartTime)/time.Second)) + "s")
+			logger.Info("Task {" + strconv.Itoa(task.ID) + "} waiting to be killed " + strconv.Itoa(int(time.Since(StartTime)/time.Second)) + "s")
 		}
 	}
 	e.mu.Unlock()
@@ -369,6 +364,164 @@ func (e *Executor) ListTasks() []int {
 		ids = append(ids, id)
 	}
 	return ids
+}
+
+// GetTaskByName returns tasks matching the given base process name.
+// For num_procs > 1, instance names are "name_0", "name_1", etc.
+// This returns all tasks whose Name equals exactly `name` or starts with `name_`.
+func (e *Executor) GetTasksByBaseName(baseName string) []*Task {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	var matches []*Task
+	for _, task := range e.tasks {
+		if task.Name == baseName || (len(task.Name) > len(baseName)+1 && task.Name[:len(baseName)+1] == baseName+"_") {
+			matches = append(matches, task)
+		}
+	}
+	return matches
+}
+
+// AddTask adds a single process as new task(s) to the executor.
+// This is the public entrypoint used during profile reload for new processes.
+func (e *Executor) AddTask(process Process, nextID *int) {
+	e.initTask(process, nextID)
+}
+
+// RemoveTask stops/kills a running task and removes it from the tasks map.
+func (e *Executor) RemoveTask(taskID int, logger *Logger) {
+	task, err := e.CheckTaskExists(taskID)
+	if err != nil {
+		return
+	}
+
+	// Stop/kill if running
+	if task.Status == StatusRunning || task.Status == StatusStopping {
+		if task.Cmd.Process != nil {
+			syscall.Kill(-task.Cmd.Process.Pid, syscall.SIGKILL) //revisar
+		}
+	}
+
+	e.mu.Lock()
+	delete(e.tasks, taskID)
+	e.mu.Unlock()
+}
+
+// processChanged checks if the new Process config differs from the existing task.
+func processChanged(task *Task, p Process) bool {
+	if task.CmdStr != p.Cmd {
+		return true
+	}
+	if task.WorkingDir != p.WorkingDir {
+		return true
+	}
+	if task.restartPolicy != p.Restart {
+		return true
+	}
+	if task.Stop_signal != p.Stop_signal {
+		return true
+	}
+	if task.MaxRestarts != p.Restart_atempts {
+		return true
+	}
+	if task.Kill_wait != p.Kill_wait {
+		return true
+	}
+	if task.launchWait != p.Launch_wait {
+		return true
+	}
+	if task.startAtLaunch != p.Start_at_launch {
+		return true
+	}
+	if task.Umask != p.Umask {
+		return true
+	}
+	if !reflect.DeepEqual(task.ExpectedExitCodes, p.ExpectedExitCodes) {
+		return true
+	}
+	// Compare env: convert process env map to slice and compare
+	var newEnv []string
+	for key, value := range p.Env {
+		newEnv = append(newEnv, fmt.Sprintf("%s=%s", key, value))
+	}
+	slices.Sort(newEnv)
+	existingEnv := make([]string, len(task.Env))
+	copy(existingEnv, task.Env)
+	slices.Sort(existingEnv)
+	if !reflect.DeepEqual(existingEnv, newEnv) {
+		return true
+	}
+	return false
+}
+
+// UpdateTask updates an existing task with new Process config.
+// If the config changed, it kills/stops the running process and applies the new config.
+// If unchanged, it leaves the task (and its running process) untouched.
+func (e *Executor) UpdateTask(taskID int, process Process, logger *Logger) {
+	task, err := e.CheckTaskExists(taskID)
+	if err != nil {
+		return
+	}
+
+	if !processChanged(task, process) {
+		// Nothing changed — leave the task as-is
+		return
+	}
+
+	logger.Info("Task {" + strconv.Itoa(taskID) + "} config changed, restarting with new config")
+
+	// Kill if currently running
+	if task.Status == StatusRunning || task.Status == StatusStopping {
+		if task.Cmd.Process != nil {
+			syscall.Kill(-task.Cmd.Process.Pid, syscall.SIGKILL) //Revisar
+			// Brief wait for the process to clean up
+			time.Sleep(200 * time.Millisecond)
+		}
+	}
+
+	// Convert env map to slice
+	var envSlice []string
+	for key, value := range process.Env {
+		envSlice = append(envSlice, fmt.Sprintf("%s=%s", key, value))
+	}
+
+	// Determine initial status
+	var initStatus Status
+	if process.Start_at_launch {
+		if process.Launch_wait > 0 {
+			initStatus = StatusWaiting
+		} else {
+			initStatus = StatusPending
+		}
+	} else {
+		initStatus = StatusNotLaunched
+	}
+	if process.Launch_wait > 0 {
+		initStatus = StatusWaiting
+		process.Start_at_launch = true
+	}
+
+	// Update task fields in-place
+	e.mu.Lock()
+	task.CmdStr = process.Cmd
+	task.Env = envSlice
+	task.WorkingDir = process.WorkingDir
+	task.restartPolicy = process.Restart
+	task.Stop_signal = process.Stop_signal
+	task.MaxRestarts = process.Restart_atempts
+	task.Kill_wait = process.Kill_wait
+	task.launchWait = process.Launch_wait
+	task.startAtLaunch = process.Start_at_launch
+	task.Umask = process.Umask
+	task.ExpectedExitCodes = process.ExpectedExitCodes
+	task.StdoutWriter = process.Stdout
+	task.StderrWriter = process.Stderr
+	task.Status = initStatus
+	task.ExitCode = 0
+	task.RestartCount = 0
+	task.StartTime = time.Time{}
+	task.EndTime = time.Time{}
+	e.mu.Unlock()
 }
 
 func (e *Executor) InfoStatusTasks() ([]*TaskInfo, error) {

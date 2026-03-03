@@ -39,7 +39,7 @@ func convertToExecutorConfig(mainConfig File_Config, logger *executor.Logger) ex
 			mode := os.FileMode(0666 & ^*p.Umask)
 			if f, err := os.OpenFile(p.Stdout, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode); err == nil {
 				f.Chmod(mode)
-				fmt.Println("> Stdout file opened for ", p.Name, " : ", p.Stdout)
+				// fmt.Println("> Stdout file opened for ", p.Name, " : ", p.Stdout)
 				logger.Info("[" + p.Name + "] stdout → file: " + f.Name() + fmt.Sprintf(" (mode %04o)", mode))
 				execProcess.Stdout = f
 			} else {
@@ -53,7 +53,7 @@ func convertToExecutorConfig(mainConfig File_Config, logger *executor.Logger) ex
 			mode := os.FileMode(0666 & *p.Umask)
 			if f, err := os.OpenFile(p.Stderr, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, mode); err == nil {
 				f.Chmod(mode)
-				fmt.Println("> Stderr file opened for ", p.Name, " : ", p.Stderr)
+				// fmt.Println("> Stderr file opened for ", p.Name, " : ", p.Stderr)
 				logger.Info("[" + p.Name + "] stderr → file: " + f.Name() + fmt.Sprintf(" (mode %04o)", mode))
 				execProcess.Stderr = f
 			} else {
