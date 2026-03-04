@@ -36,9 +36,6 @@ reload missing target error
 
 ----> PABLETO PARTE <----
 TODO:
-- shutdown cmd!
-- reloadall cmd! Test it
-- How long the program should be running after it’s started for it to be considered "successfully started"
 
 Old status:
 Hasta ahora lo que hemos hecho son un manager que tiene profiles (cada archivo de configuracion)

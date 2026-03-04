@@ -1,17 +1,45 @@
-# test_launch_wait.yaml — Launch wait timing
-# EXPECTED: slow_start.sh takes longer to initialize than launch_wait
-# VERIFY: Task should show "running" status and launch_wait is respected
+# test_launch_wait.yaml — Launch wait / successfully started behavior
+#
+# TEST PLAN:
+#
+# 1. Load this config, then immediately `ls` → all tasks should be "running"
+#
+# 2. Wait ~6s, then `ls` again:
+#    - "long-with-wait"    → status "success" (running > 5s launch_wait)
+#    - "fast-with-wait"    → status "success" (running > 2s launch_wait)
+#    - "crash-before-wait" → status "failed"  (crashed at 2s, before 5s launch_wait)
+#    - "no-wait-control"   → status "running" (no launch_wait, stays running)
+#
 process:
-  - name: slow-starter
-    cmd: /app/tests/scripts/slow_start.sh
-    restart: never
-    start_at_launch: true
-    launch_wait: 3s
-    env:
-      STARTUP_DELAY: "5"
-
-  - name: fast-starter
+  # Long‑running process with launch_wait=5s.
+  # It runs forever, so after 5s it should report "success".
+  - name: long-with-wait
     cmd: /app/tests/scripts/long_running.sh
     restart: never
     start_at_launch: true
-    launch_wait: 1s
+    launch_wait: 5s
+
+  # Long‑running process with a short launch_wait=2s.
+  # After 2s still alive → "success" quickly.
+  - name: fast-with-wait
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true
+    launch_wait: 2s
+
+  # Crashes after 2s, but launch_wait is 5s.
+  # The process dies before the wait elapses → status should be "failed", NOT "success".
+  - name: crash-before-wait
+    cmd: /app/tests/scripts/crash_loop.sh
+    restart: never
+    start_at_launch: true
+    launch_wait: 5s
+    env:
+      CRASH_DELAY: "2"
+
+  # Control: no launch_wait at all.
+  # Status should stay "running" forever, never become "success".
+  - name: no-wait-control
+    cmd: /app/tests/scripts/long_running.sh
+    restart: never
+    start_at_launch: true

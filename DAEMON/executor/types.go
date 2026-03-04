@@ -40,10 +40,10 @@ const (
 	StatusWaiting     Status = "waiting"
 	StatusKilled      Status = "killed"
 	StatusRunning     Status = "running"
+	StatusSuccess     Status = "success start"
 	StatusStopping    Status = "stopping"
 	StatusStopped     Status = "stopped"
 	StatusFailed      Status = "failed"
-	StatusSuccess     Status = "success"
 )
 
 type Task struct {

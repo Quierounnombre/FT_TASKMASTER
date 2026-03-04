@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strconv"
+	"sync"
 )
 
 func NewManager() *Manager {
@@ -39,10 +40,29 @@ func (m *Manager) Logger() *Logger {
 }
 
 func (m *Manager) Shutdown() {
-	m.logger.Info("Shutting down manager")
+	m.logger.Info("Shutting down all tasks")
 	if m.watcher != nil {
 		m.watcher.Stop()
 	}
+
+	// Stop all tasks across all profiles and wait for them to finish
+	var wg sync.WaitGroup
+
+	m.mu.RLock()
+	for _, profile := range m.profiles {
+		taskIDs := profile.executor.ListTasks()
+		for _, taskID := range taskIDs {
+			wg.Add(1)
+			go func(exec *Executor, id int) {
+				defer wg.Done()
+				exec.Stop(id, m.logger)
+			}(profile.executor, taskID)
+		}
+	}
+	m.mu.RUnlock()
+
+	wg.Wait()
+	m.logger.Info("All tasks stopped. Daemon shutting down.")
 }
 
 func (m *Manager) GetProfilePath(profileID int) string {

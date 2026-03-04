@@ -216,6 +216,9 @@ func (e *Executor) GetStatus(id int) (Status, error) {
 	if err != nil {
 		return "", err
 	}
+	if task.Status == StatusRunning && task.launchWait > 0 && time.Since(task.StartTime) >= task.launchWait {
+		return StatusSuccess, nil
+	}
 	return task.Status, nil
 }
 
@@ -543,6 +546,7 @@ func (e *Executor) GetTaskInfo(id int) (*TaskInfo, error) {
 	}
 
 	var timeRunning string
+	taskStatus, _ := e.GetStatus(id)
 	switch task.Status {
 	case StatusPending, StatusNotLaunched:
 		// not started yet — show nothing
@@ -550,6 +554,9 @@ func (e *Executor) GetTaskInfo(id int) (*TaskInfo, error) {
 	case StatusRunning:
 		// live elapsed since start
 		timeRunning = time.Since(task.StartTime).String()
+		if task.launchWait > 0 && time.Since(task.StartTime) >= task.launchWait {
+			taskStatus = StatusSuccess
+		}
 	default:
 		// finished (success, failed, stopped, killed) — duration at the moment it ended
 		if !task.StartTime.IsZero() && !task.EndTime.IsZero() {
@@ -560,7 +567,7 @@ func (e *Executor) GetTaskInfo(id int) (*TaskInfo, error) {
 	taskInfo := &TaskInfo{
 		TaskID:      task.ID,
 		Name:        task.Name,
-		Status:      task.Status,
+		Status:      taskStatus,
 		TimeRunning: timeRunning,
 	}
 	return taskInfo, nil
