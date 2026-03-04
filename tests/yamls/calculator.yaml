@@ -1,6 +1,9 @@
+# This test checks:
+# 	- if stdout redirection works
+# 	- how a task ends
 process:
   - name: calculator
-    cmd: /app/tests/calculator/calculator.sh
+    cmd: /app/tests/scripts/calculator.sh
     restart: on_error
     start_at_launch: true
     stdout: /app/tests/calculator/calculator_result

@@ -1,0 +1,12 @@
+# This test checks:
+# 	- if a task can read the env
+# 	- if a task can modify its env
+# 	- how a task can run indefinitly(set LIMIT to a huge number)
+# 	- how a task can fail(not set LIMIT)
+process:
+  - name: clock
+    cmd: /app/tests/scripts/clock.sh
+    restart: on_error
+    start_at_launch: true
+    env:
+      LIMIT: "10"

@@ -395,10 +395,10 @@ func (e *Executor) RemoveTask(taskID int, logger *Logger) {
 		return
 	}
 
-	// Stop/kill if running
+	// Stop if running
 	if task.Status == StatusRunning || task.Status == StatusStopping {
 		if task.Cmd.Process != nil {
-			syscall.Kill(-task.Cmd.Process.Pid, syscall.SIGKILL) //revisar
+			e.Stop(taskID, logger)
 		}
 	}
 
@@ -470,12 +470,10 @@ func (e *Executor) UpdateTask(taskID int, process Process, logger *Logger) {
 
 	logger.Info("Task {" + strconv.Itoa(taskID) + "} config changed, restarting with new config")
 
-	// Kill if currently running
+	// Stop if currently running
 	if task.Status == StatusRunning || task.Status == StatusStopping {
 		if task.Cmd.Process != nil {
-			syscall.Kill(-task.Cmd.Process.Pid, syscall.SIGKILL) //Revisar
-			// Brief wait for the process to clean up
-			time.Sleep(200 * time.Millisecond)
+			e.Stop(taskID, logger)
 		}
 	}
 

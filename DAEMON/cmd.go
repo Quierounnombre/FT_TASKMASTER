@@ -88,6 +88,30 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 		msg.add_payload("id", ProfileID)
 		msg.add_payload("task", tasks)
 
+	case "reloadall":
+		manager.Logger().Info("Cmd request: Reload all profiles")
+		allProfiles := manager.ListProfiles()
+		if allProfiles == nil {
+			c.send_error(msg, "No profiles found", manager.Logger())
+			return
+		}
+		for _, profile := range allProfiles {
+			manager.Logger().Info("Cmd request: Reload profile " + strconv.Itoa(profile.ProfileID))
+			tmp := get_config_from_file_name(manager.GetProfilePath(profile.ProfileID))
+			if tmp == nil {
+				c.send_error(msg, "Check file existance", manager.Logger())
+				return
+			}
+			// PrintFile_ConfigStruct(*tmp) // Debug
+			execConfig := convertToExecutorConfig(*tmp, manager.Logger())
+			_, err := manager.ReloadProfile(execConfig, profile.ProfileID)
+			if err != nil {
+				c.send_error(msg, err.Error(), manager.Logger())
+				return
+			}
+		}
+		msg.add_payload("cmd", "reloadall")
+
 	case "unload":
 		if c.flags == nil {
 			c.send_error(msg, "Unload missing target", manager.Logger())
