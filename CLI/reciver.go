@@ -62,7 +62,7 @@ func enforce_max_size(str string, size int) string {
 	chars = []rune(str)
 	lenght = len(chars)
 	if lenght > size {
-		return string(chars[lenght-size:])
+		return string(chars[lenght - size:])
 	}
 	return string(chars)
 }
@@ -165,6 +165,7 @@ func recive_describe(json *map[string]interface{}, rl *readline.Instance) {
 		"id", "name", "status", "exitCode", "restartCount",
 		"maxRestarts", "startTime", "workingDir", "env",
 		"expectedExitCodes", "umask", "restartPolicy", "cmd",
+		"stopsignal", "killwait", "launchwait", "startatlaunch",
 	}
 	labels := map[string]string{
 		"id":                "ID",
@@ -180,6 +181,10 @@ func recive_describe(json *map[string]interface{}, rl *readline.Instance) {
 		"umask":             "Umask",
 		"restartPolicy":     "RestartPolicy",
 		"cmd":               "Cmd",
+		"stopsignal":        "StopSignal",
+		"killwait":          "KillWait",
+		"launchwait":        "WaitAtLaunch",
+		"startatlaunch":     "StartAtLaunch",
 	}
 
 	for _, key = range fields {
@@ -200,6 +205,10 @@ func recive_describe(json *map[string]interface{}, rl *readline.Instance) {
 			tmp = task[key].(float64)
 			i = int(tmp)
 			b.WriteString(fmt.Sprintf("%-17s: %04d\n", label, i))
+		} else if key == "killwait" || key == "launchwait" {
+			tmp = task[key].(float64)
+			d := time.Duration(int64(tmp))
+			b.WriteString(fmt.Sprintf("%-17s: %v\n", label, d))
 		} else {
 			add(label, key)
 		}
@@ -272,9 +281,9 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 	var ts string
 	var obj interface{}
 
-	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------|\n"))
-	rl.Write([]byte("|  ID  | Name                           |  Status      | Time running          |\n"))
-	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------|\n"))
+	rl.Write([]byte("+------+-------------------------------+---------------+-----------------------+\n"))
+	rl.Write([]byte("|  ID  | Name                          |  Status       | Time running          +\n"))
+	rl.Write([]byte("+------+-------------------------------+---------------+-----------------------+\n"))
 	proc_lst, ok = (*json)["procs"].([]interface{})
 	if !ok {
 		proc_lst = nil
@@ -303,12 +312,12 @@ func recive_ls(json *map[string]interface{}, rl *readline.Instance) {
 		} else {
 			ts = format_duration(ts)
 		}
-		name = enforce_max_size(name, 30)
-		status = enforce_max_size(status, 12)
+		name = enforce_max_size(name, 29)
+		status = enforce_max_size(status, 13)
 		ts = enforce_max_size(ts, 21)
-		rl.Write([]byte(fmt.Sprintf("| %-4s | %-30s | %-12s | %21s |\n", strconv.Itoa(id), name, status, ts)))
+		rl.Write([]byte(fmt.Sprintf("| %-4s | %-29s | %-13s | %21s |\n", strconv.Itoa(id), name, status, ts)))
 	}
-	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------|\n"))
+	rl.Write([]byte("+------+--------------------------------+--------------+-----------------------+\n"))
 }
 
 func recive_kill(json *map[string]interface{}, rl *readline.Instance) {
@@ -358,6 +367,15 @@ func recive_russian(json *map[string]interface{}, rl *readline.Instance) {
 	rl.Write([]byte("Our winner winner chiken dinner is: " + unlucky + "\n"))
 }
 
+func recive_shutdown(rl *readline.Instance) {
+	rl.Write([]byte("Daemon, shutdown, exiting CLI\n"))
+	os.Exit(0)
+}
+
+func recive_reloadall(rl *readline.Instance) {
+	rl.Write([]byte("All profiles reloaded\n"))
+}
+
 func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *int) {
 	var ok bool
 	var cmd string
@@ -394,6 +412,10 @@ func reciver(json *map[string]interface{}, rl *readline.Instance, profile_id *in
 		recive_unload(json, rl, profile_id)
 	case "russian":
 		recive_russian(json, rl)
+	case "shutdown":
+		recive_shutdown(rl)
+	case "reloadall":
+		recive_reloadall(rl)
 	default:
 		rl.Write([]byte("DEFAULT"))
 	}

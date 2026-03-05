@@ -247,6 +247,10 @@ func (e *Executor) GetTaskDetail(id int) (*TaskDetail, error) {
 		ExpectedExitCodes: task.ExpectedExitCodes,
 		Umask:             task.Umask,
 		RestartPolicy:     task.restartPolicy,
+		Stopsignal:        task.Stop_signal,
+		Killwait:          task.Kill_wait,
+		Launchwait:        task.launchWait,
+		Startatlaunch:     task.startAtLaunch,
 	}
 	return taskDetail, nil
 }

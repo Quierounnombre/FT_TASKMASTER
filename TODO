@@ -1,7 +1,6 @@
 crear un dockerfile para ejecutar el proyecto
 Loggeer event
 limpiar
-CLI:
 FLAG PARA CAARGAR VS ENTRAR
 SENDING ls breaks the daemon
 Daemon:
@@ -29,10 +28,13 @@ Settear wrapper the cmds
 Ordenar id en reciver
 Cmd para matar perfiles
 Evitar sobrecargar el servidor con el CLI
-
-New task from 16/02/2026
 Revisar restart CLI
 reload missing target error
+Añadir reloadall reciver
+Añadir shutdown reciver
+Addiming missing describe
+
+CLI:
 
 ----> PABLETO PARTE <----
 TODO:

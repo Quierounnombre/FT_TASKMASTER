@@ -118,5 +118,9 @@ type TaskDetail struct {
 	WorkingDir        string   `json:"workingDir"`
 	ExpectedExitCodes []int    `json:"expectedExitCodes"`
 	Umask             int      `json:"umask"`
-	RestartPolicy     string   `json:"restartPolicy"`
+	RestartPolicy     string			`json:"restartPolicy"`
+	Stopsignal        int				`json:"stopsignal"`
+	Killwait          time.Duration		`json:"killwait"`
+	Launchwait        time.Duration		`json:"launchwait"`
+	Startatlaunch     bool				`json:"startatlaunch"`
 }

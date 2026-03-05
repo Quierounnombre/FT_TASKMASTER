@@ -38,7 +38,7 @@ func recive_data(sk net.Conn, rl *readline.Instance, profile_id *int) {
 	var ne			net.Error
 	var ok			bool
 
-	sk.SetReadDeadline(time.Now().Add(15 * time.Second))
+	sk.SetReadDeadline(time.Now().Add(90 * time.Second))
 	decoder = json.NewDecoder(sk)
 	err = decoder.Decode(&msg)
 	if err != nil {
