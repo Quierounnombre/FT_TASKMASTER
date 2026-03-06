@@ -268,6 +268,12 @@ func (e *Executor) Stop(id int, logger *Logger) {
 	}
 	task.Status = StatusStopping
 
+	if task.Cmd.Process == nil {
+		e.mu.Unlock()
+		logger.Error("Task {" + strconv.Itoa(task.ID) + "} has no running process to stop")
+		return
+	}
+
 	// Send the stop signal to the entire process group (negative PID) so the
 	// signal reaches the actual script, not just the /bin/sh parent process.
 	if err := syscall.Kill(-task.Cmd.Process.Pid, syscall.Signal(task.Stop_signal)); err != nil {
