@@ -3,7 +3,7 @@
 #BAD PRACTICE, if something fails stop.
 
 #RELATIVE PATH
-CLI="taskcli"
+CLI="$(command -v taskcli)"
 
 #PATH launch only from tests
 TEST_PATH="$(pwd)"
