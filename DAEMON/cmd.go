@@ -36,6 +36,7 @@ func (c *Cmd) Execute(manager *executor.Manager, msg *Msg) {
 		manager.Logger().Info("Cmd request: Shutdown daemon")
 		manager.Shutdown()
 		msg.add_payload("cmd", "shutdown")
+		msg.reply()
 		os.Exit(0)
 
 	case "load":
